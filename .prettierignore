@@ -1,0 +1,25 @@
+# Note that we only run prettier in src/** anyway, see package.json script `format`.
+
+node_modules
+.public
+.env
+
+# IDE
+.vscode
+.idea
+
+# git
+.github
+.git-worktrees
+.husky
+
+# production
+build
+
+# next
+.next
+.vercel
+
+# generated files
+src/typechain-types
+src/graphql/codegen/generated.ts

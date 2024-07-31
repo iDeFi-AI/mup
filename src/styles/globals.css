@@ -1,0 +1,348 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0; /* Now text will be black */
+  --background-start-rgb: 255, 255, 255; /* Start of background gradient is white */
+  --background-end-rgb: 255, 255, 255; /* End of background gradient is also white */
+  --description-color: #4a4a4a; /* For dark grey color in descriptions */
+  --link-color: #ff9f66; /* Neon orange color for links */
+}
+
+@media (prefers-color-scheme: white) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+    --description-color: #d3d3d3;
+    --link-color: #ff9f66;
+  }
+}
+
+@font-face {
+  font-family: 'Oxanium';
+  src: url('Oxanium-VariableFont_wght.ttf') format('truetype');
+  /* Add other font formats if needed */
+  font-weight: normal;
+  font-style: normal;
+}
+
+html, body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Oxanium', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  line-height: 1.6;
+  font-size: 18px;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+}
+
+h1, h2, h5, h6 { 
+  font-weight: bold; /* Making all headers bold */
+  font-size: 34px; 
+}
+
+h3 {
+  font-size: 28px;
+}
+
+h4 {
+  font-size: 21px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--link-color);  /* Neon orange color for links */
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ff5733; /* Lighter neon orange on hover */
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+}
+
+input[type=email], input[type=password] {
+  padding: 0.5rem; /* padding inside the input field */
+  font-size: 14px; /* font size of text in the input field */
+  width: 250px; /* width of the input field */
+  border-radius: 15px; 
+  font-weight: 600;
+  color: var(--link-color); /* Neon orange text color */
+}
+
+input[type=email], input[type=password] {
+  background-color: #ECEDF3; 
+}
+
+input[type=text] {
+ width: 100%;
+ border-radius: 5px;
+}
+
+p {
+  margin-bottom: .5rem; /* spacing below each paragraph element */
+  color: var(--link-color); /* Neon orange text color */
+  font-weight: 600;
+  font-size: 16px; 
+}
+
+form {
+  margin-top: 2rem; /* adjust as needed */
+}
+
+.button { 
+  color: white;
+  background-color: var(--link-color); /* Neon orange background color */
+}
+.neon-button {
+  color: white;
+  background-color: var(--link-color); /* Neon orange background color */
+  padding: 15px 32px;
+  border: 3px solid transparent; /* initially the border is transparent */
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 12px;
+  width: calc(50% - 6px); /* deducting border width from total width */
+  margin-bottom: 4px;
+  height: 60px;
+  font-weight: 600;
+}
+
+.neon-button:hover {
+  border-color: #ff9f66; /* border color only visible on hover */
+}
+
+.container {
+  max-width: 1200px; /*set your desired width*/
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 50px;
+}
+
+.image-container {
+  width: 100%;
+  height: 100%;
+  padding-bottom: 5%; /* For an aspect ratio of 16:9 */
+  overflow: hidden;
+  align-content: center;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.section-paragraph {
+  color: var(--link-color); /* Neon orange color */
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+
+.header {
+  text-align: center;
+  padding: 20px;
+}
+
+.bg-gray-900 {
+  background-color: #ffffff;
+}
+
+.text-white {
+  color: #000000;
+}
+
+.text-gray-400 {
+  color: #4a4a4a;
+}
+
+.text-gray-200 {
+  color: #666666;
+}
+
+.idac-score-card {
+  flex-wrap: wrap;
+  width: 300px;
+  height: 450px;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
+  border-radius: 10px;
+  text-align: center;
+  overflow: hidden;
+  background-color: transparent;
+  border: 4px solid #000000;
+  margin-bottom: 50px;
+}
+
+.idac-score-card.green {
+  background-color: #45DC6F;
+}
+
+.idac-score-card.yellow {
+  background-color: #FFE600;
+}
+
+.idac-score-card.orange {
+  background-color: #F48120;
+}
+
+.idac-score-card.red {
+  background-color: #FF0000;
+}
+
+.idac-score-card.black {
+  background-color: #000000;
+}
+
+.idac-score-card.grey {
+  background-color: #C8C8D9;
+}
+
+/* Adjust the size of the hexagon as needed */
+.hexagon {
+  width: 100px; /* Adjust the size as needed */
+  height: 100px; /* Adjust the size as needed */
+  position: relative;
+  background-size: cover;
+  bottom: 100px;
+}
+
+.score {
+  color: black;
+  font-weight: bold;
+  position: absolute;
+  font-size: 24px;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .score
+  { color: black;
+  font-weight: bold;
+  position: absolute;
+  font-size: 12px;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+ }
+}
+
+@media (max-width: 768px) {
+  .score
+  { color: black;
+  font-weight: bold;
+  position: absolute;
+  font-size: 24px;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+ }
+}
+
+@media (max-width: 480px) {
+  .score
+  { color: black;
+  font-weight: bold;
+  position: absolute;
+  font-size: 24px;
+  bottom: 30px;
+  left: 0;
+  right: 0;
+  text-align: center;
+ }
+}
+
+.description {
+  background-color: #ffffff;
+  width: 80%;
+  height: 40px;
+  font-weight: bold;
+  font-size: 24px; /* Adjust the font size as needed */
+  color: black;
+  position: absolute;
+  bottom: 45px;
+  border-radius: 10px;
+}
+
+.address {
+  font-weight: bold;
+  font-size: 10px;
+  color: black;
+  text-decoration: underline;
+  position: absolute;
+  margin-top: 50px;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.inner-hexagon {
+  width: 100%;
+  height: auto;
+}
+
+.hexagon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Adjust the size of the hexagon as needed */
+.hexagon-poc {
+  width: 200px; 
+  height: 200px; 
+  position: relative;
+  bottom: 11em;
+}
+
+/* Media query for smaller screens */
+@media (max-width: 1024px) {
+  .hexagon-poc {
+    width: 200px; /* Adjust the size for smaller screens, e.g., tablets */
+    height: 200px; /* Adjust the size for smaller screens, e.g., tablets */
+    bottom: 9em;
+    position: relative; /* Adjust the positioning for smaller screens, e.g., tablets */
+  }
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .hexagon-poc {
+    width: 100px; /* Adjust the size for smaller screens, e.g., tablets */
+    height: 100px; /* Adjust the size for smaller screens, e.g., tablets */
+    bottom: 9em;
+    position: relative; /* Adjust the positioning for smaller screens, e.g., tablets */
+  }
+}
+
+/* Media query for even smaller screens, e.g., phones */
+@media (max-width: 480px) {
+  .hexagon-poc {
+    width: 100px; /* Adjust the size for smaller screens, e.g., phones */
+    height: 100px; /* Adjust the size for smaller screens, e.g., phones */
+    bottom: 7em;
+    position: relative; /* Adjust the positioning for smaller screens, e.g., phones */
+  }
+}
