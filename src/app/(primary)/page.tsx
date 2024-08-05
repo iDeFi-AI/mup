@@ -13,8 +13,21 @@ import EthIDAC from '@/components/layouts/EthIDAC';
 import HexagonScore from '@/components/layouts/ScoreHexa';
 import ScoreTxns from '@/components/layouts/ScoreTxns';
 import CodeTerminal from '@/components/layouts/CodeTerminal';
-import { fetchData, generateInsights, generateOpenAIPrompt, fetchDataAndMetrics } from '@/utilities/dataUtils';
-import { fetchTransactionsFromApi, checkFlaggedAddress } from '@/utilities/apiUtils';
+import {
+  fetchData,
+  generateInsights,
+  generateOpenAIPrompt,
+  fetchDataAndMetrics,
+} from '@/utilities/dataUtils';
+import {
+  fetchTransactionsFromApi,
+  checkFlaggedAddress,
+} from '@/utilities/apiUtils';
+import {
+  quantumRiskAnalysis,
+  portfolioOptimization,
+} from '@/utilities/quantumApiUtils';
+import { Bar } from 'react-chartjs-2';
 import web3 from '@/utilities/web3Utils';
 
 // Define the Transaction type
@@ -33,6 +46,14 @@ interface Transaction {
 interface InsightsResponse {
   openAIResponse?: string | null; // Adjust the type based on the expected response
   // Add other properties as needed
+}
+
+interface Metrics {
+  'Total ETH Sent': number;
+  'Total ETH Received': number;
+  'Average Gas Price (Gwei)': number;
+  'Capital Gains': number;
+  [key: string]: any;
 }
 
 const getColorForScore = (score: number): string => {
@@ -58,8 +79,11 @@ const DApp: React.FC = () => {
   const [insights, setInsights] = useState<string>('');
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [uniqueAddresses, setUniqueAddresses] = useState<string[]>([]);
   const [flaggedStatus, setFlaggedStatus] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
+  const [optimizedPortfolio, setOptimizedPortfolio] = useState<any>(null);
   const otherAddress = ''; // Adjust this value based on your requirements
 
   useEffect(() => {
@@ -68,7 +92,7 @@ const DApp: React.FC = () => {
     // Listen to changes in transactions and update the state
     listenToTransactions((data) => {
       if (mounted.current) {
-        setTransactions(data || []);
+        setTransactions(Array.isArray(data) ? data : []);
       }
     });
 
@@ -76,6 +100,16 @@ const DApp: React.FC = () => {
       mounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (Array.isArray(transactions)) {
+      const addresses = new Set<string>();
+      transactions.forEach((tx) => {
+        addresses.add(tx.thirdPartyWallet);
+      });
+      setUniqueAddresses(Array.from(addresses));
+    }
+  }, [transactions]);
 
   const isValidAddress = (address: string) => {
     const ethRegExp = /^(0x)?[0-9a-fA-F]{40}$/;
@@ -122,8 +156,8 @@ const DApp: React.FC = () => {
     if (mounted.current && !connectedAccount) {
       fetchAccount();
     }
-  }, [connectedAccount]); 
-  
+  }, [connectedAccount]);
+
   const handleGenerateScore = async () => {
     // Determine the address to use
     const addressToUse = connectedAccount || userAddress;
@@ -136,7 +170,11 @@ const DApp: React.FC = () => {
     // Fetch transaction data
     const fetchedTransactions = await fetchData(addressToUse, 'eth');
 
-    if (fetchedTransactions && fetchedTransactions.length > 0) {
+    if (
+      fetchedTransactions &&
+      Array.isArray(fetchedTransactions) &&
+      fetchedTransactions.length > 0
+    ) {
       // Store user ID in Firebase
       storeUserId({ userId: addressToUse });
 
@@ -151,15 +189,25 @@ const DApp: React.FC = () => {
       // Generate and set the score
       const score = generateScore(addressToUse);
       setGeneratedScore(score);
-      
+
       alert('Transaction history loaded successfully!');
 
       try {
         // Generate OpenAI prompt based on transactions
-        const openAIPrompt = generateOpenAIPrompt(addressToUse, otherAddress, fetchedTransactions, score);
+        const openAIPrompt = generateOpenAIPrompt(
+          addressToUse,
+          otherAddress,
+          fetchedTransactions,
+          score
+        );
 
         // Generate and set insights
-        const insightsResponse = await generateInsights(addressToUse, otherAddress, openAIPrompt, score);
+        const insightsResponse = await generateInsights(
+          addressToUse,
+          otherAddress,
+          openAIPrompt,
+          score
+        );
 
         // Log the insightsResponse for debugging
         console.log('Insights response:', insightsResponse);
@@ -170,7 +218,11 @@ const DApp: React.FC = () => {
             setInsights(insightsResponse);
 
             // Push insights to Firebase
-            pushAiInsights({ userAddress: addressToUse, insights: insightsResponse, timestamp: Date.now() });
+            pushAiInsights({
+              userAddress: addressToUse,
+              insights: insightsResponse,
+              timestamp: Date.now(),
+            });
           } else {
             console.error('Invalid insights response:', insightsResponse);
           }
@@ -179,6 +231,22 @@ const DApp: React.FC = () => {
         }
       } catch (error) {
         console.error('Error generating insights:', error);
+      }
+
+      // Check if the address is flagged
+      const flaggedResponse = await checkFlaggedAddress(addressToUse);
+      if (flaggedResponse && flaggedResponse.description) {
+        setFlaggedStatus(flaggedResponse.description);
+      } else {
+        setFlaggedStatus('No information available.');
+      }
+
+      // Fetch data and metrics
+      const metricsResponse = await fetchDataAndMetrics(addressToUse);
+      if (metricsResponse) {
+        setMetrics(metricsResponse.metrics);
+      } else {
+        console.error('Failed to fetch metrics data.');
       }
     } else {
       // Handle case where there are no transactions
@@ -190,15 +258,6 @@ const DApp: React.FC = () => {
       // Optionally, you can set a message or take other actions to inform the user
       console.log('No transactions available for the given address.');
       alert('No transactions or score available for the given address.');
-      return; // This will prevent further execution of the function
-    }
-
-    // Check if the address is flagged
-    const flaggedResponse = await checkFlaggedAddress(addressToUse);
-    if (flaggedResponse && flaggedResponse.description) {
-      setFlaggedStatus(flaggedResponse.description);
-    } else {
-      setFlaggedStatus('No information available.');
     }
   };
 
@@ -213,14 +272,28 @@ const DApp: React.FC = () => {
     // Fetch transaction data
     const fetchedTransactions = await fetchData(addressToUse, 'eth');
 
-    if (fetchedTransactions && fetchedTransactions.length > 0) {
+    if (
+      fetchedTransactions &&
+      Array.isArray(fetchedTransactions) &&
+      fetchedTransactions.length > 0
+    ) {
       try {
         // Generate OpenAI prompt based on transactions
         if (generatedScore !== null) {
-          const openAIPrompt = generateOpenAIPrompt(addressToUse, otherAddress, fetchedTransactions, generatedScore);
+          const openAIPrompt = generateOpenAIPrompt(
+            addressToUse,
+            otherAddress,
+            fetchedTransactions,
+            generatedScore
+          );
 
           // Generate and set insights
-          const insightsResponse = await generateInsights(addressToUse, otherAddress, openAIPrompt, generatedScore);
+          const insightsResponse = await generateInsights(
+            addressToUse,
+            otherAddress,
+            openAIPrompt,
+            generatedScore
+          );
 
           // Log the insightsResponse for debugging
           console.log('Insights response:', insightsResponse);
@@ -278,6 +351,34 @@ const DApp: React.FC = () => {
     }
   };
 
+  const performQuantumRiskAnalysis = async () => {
+    const portfolio = transactions.map((tx) => ({
+      value: tx.usdAmount,
+      wallet: tx.thirdPartyWallet,
+    }));
+
+    try {
+      const response = await quantumRiskAnalysis(portfolio);
+      setRiskAnalysis(response.risk_analysis);
+    } catch (error) {
+      console.error('Error performing quantum risk analysis:', error);
+    }
+  };
+
+  const performPortfolioOptimization = async () => {
+    const portfolio = transactions.map((tx) => ({
+      value: tx.usdAmount,
+      wallet: tx.thirdPartyWallet,
+    }));
+
+    try {
+      const response = await portfolioOptimization(portfolio);
+      setOptimizedPortfolio(response.optimized_portfolio);
+    } catch (error) {
+      console.error('Error performing portfolio optimization:', error);
+    }
+  };
+
   const generateScore = (address: string): number => {
     const hash = hashCode(address);
     const uniqueScore = Math.abs(hash) % 851;
@@ -293,6 +394,25 @@ const DApp: React.FC = () => {
     return hash;
   };
 
+  const chartData = {
+    labels: Array.isArray(transactions)
+      ? transactions.map((tx) =>
+          new Date(tx.timestamp).toLocaleDateString()
+        )
+      : [],
+    datasets: [
+      {
+        label: 'Transaction Amount (USD)',
+        data: Array.isArray(transactions)
+          ? transactions.map((tx) => tx.usdAmount)
+          : [],
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
   return (
     <div className="main-container flex flex-col items-center justify-center min-h-screen bg-white text-center">
       <Head>
@@ -300,7 +420,12 @@ const DApp: React.FC = () => {
       </Head>
       <section className="flex flex-col items-center justify-center py-12">
         <div className="mb-6">
-          <Image src="/brandlogo.png" alt="brand logo" width={200} height={200} />
+          <Image
+            src="/brandlogo.png"
+            alt="brand logo"
+            width={200}
+            height={200}
+          />
         </div>
         <h4 className="text-lg mb-16">Connect wallet or enter address</h4>
         <input
@@ -327,15 +452,24 @@ const DApp: React.FC = () => {
         <EthIDAC seed={userAddress} onAccountChange={handleAccountChange} />
         <hr className="border-t border-gray-300 w-full mb-12 mt-12" />
         {generatedScore !== null && (
-          <div className={`mb-6 ${getColorForScore(generatedScore)}`}>
-            <HexagonScore seed={userAddress.toLowerCase()} generatedScore={generatedScore} />
+          <div className={`mb-6 text-${getColorForScore(generatedScore)}`}>
+            <HexagonScore
+              seed={userAddress.toLowerCase()}
+              generatedScore={generatedScore}
+            />
           </div>
         )}
         {generatedScore !== null && transactions.length > 0 && (
-          <ScoreTxns transactions={transactions} overallScore={generatedScore} />
+          <ScoreTxns
+            transactions={transactions}
+            uniqueAddresses={uniqueAddresses}
+            overallScore={generatedScore}
+          />
         )}
         {generatedScore !== null && transactions.length === 0 && (
-          <p className="text-red-500">No transactions available for the given address.</p>
+          <p className="text-red-500">
+            No transactions available for the given address.
+          </p>
         )}
         <div className="header container mb-6">
           <h2 className="text-xl font-bold mb-2">iDeFi.AI Insights:</h2>
@@ -350,19 +484,28 @@ const DApp: React.FC = () => {
         {metrics && (
           <div className="header container mb-6">
             <h2 className="text-xl font-bold mb-2">Metrics:</h2>
-            <pre className="text-left">{JSON.stringify(metrics, null, 2)}</pre>
+            <ul className="list-disc list-inside">
+              {Object.entries(metrics).map(([key, value]) => (
+                <li key={key} className="text-lg mb-2">{`${key}: ${value}`}</li>
+              ))}
+            </ul>
           </div>
         )}
-        <div className="flex items-center justify-center mt-4">
+        {transactions.length > 0 && (
+          <div className="w-full md:w-2/3 lg:w-1/2 mx-auto mb-8">
+            <Bar data={chartData} />
+          </div>
+        )}
+        <div className="flex flex-col md:flex-row items-center justify-center mt-4 space-y-2 md:space-y-0 md:space-x-2">
           <button
             onClick={fetchAiInsights}
-            className="bg-neorange text-white font-bold py-2 px-4 rounded mr-2"
+            className="bg-neorange text-white font-bold py-2 px-4 rounded"
           >
             Fetch AI Insights
           </button>
           <button
             onClick={checkAddressFlaggedStatus}
-            className="bg-neohover text-white font-bold py-2 px-4 rounded mr-2"
+            className="bg-neohover text-white font-bold py-2 px-4 rounded"
           >
             Check Flagged Status
           </button>
@@ -372,7 +515,37 @@ const DApp: React.FC = () => {
           >
             Fetch Data and Metrics
           </button>
+          <button
+            onClick={performQuantumRiskAnalysis}
+            className="bg-neodark text-white font-bold py-2 px-4 rounded"
+          >
+            Quantum Risk Analysis
+          </button>
+          <button
+            onClick={performPortfolioOptimization}
+            className="bg-neodark text-white font-bold py-2 px-4 rounded"
+          >
+            Portfolio Optimization
+          </button>
         </div>
+        {riskAnalysis && (
+          <div className="header container mb-6">
+            <h2 className="text-xl font-bold mb-2">
+              Quantum Risk Analysis Results:
+            </h2>
+            <pre className="text-left">
+              {JSON.stringify(riskAnalysis, null, 2)}
+            </pre>
+          </div>
+        )}
+        {optimizedPortfolio && (
+          <div className="header container mb-6">
+            <h2 className="text-xl font-bold mb-2">Optimized Portfolio:</h2>
+            <pre className="text-left">
+              {JSON.stringify(optimizedPortfolio, null, 2)}
+            </pre>
+          </div>
+        )}
       </section>
     </div>
   );

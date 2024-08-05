@@ -16,6 +16,7 @@ interface Transaction {
 interface ScoreTxnsProps {
   transactions: Transaction[];
   overallScore: number | null; // Pass the overall iDAC score as a prop
+  uniqueAddresses: string[];   // Unique addresses prop
 }
 
 const getColorForScore = (score: number, overallScore: number | null): string => {
@@ -54,7 +55,7 @@ const getCategoryForScore = (score: number): string => {
   }
 };
 
-const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions, overallScore }) => {
+const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions, overallScore, uniqueAddresses }) => {
   const sortedTransactions = [...transactions].sort((a, b) => b.thirdPartyIdacScore - a.thirdPartyIdacScore);
 
   return (
