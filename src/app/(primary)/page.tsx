@@ -20,13 +20,10 @@ import {
   fetchDataAndMetrics,
 } from '@/utilities/dataUtils';
 import {
-  fetchTransactionsFromApi,
   checkFlaggedAddress,
-} from '@/utilities/apiUtils';
-import {
   quantumRiskAnalysis,
   portfolioOptimization,
-} from '@/utilities/quantumApiUtils';
+} from '@/utilities/apiUtils';
 import { Bar } from 'react-chartjs-2';
 import web3 from '@/utilities/web3Utils';
 
