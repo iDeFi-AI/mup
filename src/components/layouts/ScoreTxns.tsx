@@ -1,207 +1,147 @@
-// components/ScoreTxns.tsx
-import React from 'react';
-import Image from 'next/image';
+import React, { useEffect, useState } from "react";
+import {
+  checkMultipleAddresses,
+  fetchTransactionSummary,
+} from "@/utilities/apiUtils";
 
-type TransactionType = 'Sent' | 'Received';
+type TransactionType = "Sent" | "Received";
 
 interface Transaction {
+  id: string;
   timestamp: string;
   type: TransactionType;
   cryptocurrency: string;
-  thirdPartyIdacScore: number;
   usdAmount: number;
   thirdPartyWallet: string;
+  flagged: boolean;
+  risk: "High" | "Medium" | "Low" | "None";
+}
+
+interface TransactionSummary {
+  number_of_interactions_with_flagged_addresses: number;
+  number_of_risky_transactions: number;
+  total_value: number;
+  all_dates_involved: string[];
+}
+
+interface CheckAddressResult {
+  address: string;
+  status: "Fail" | "Pass";
+  description?: string;
 }
 
 interface ScoreTxnsProps {
   transactions: Transaction[];
-  overallScore: number | null; // Pass the overall iDAC score as a prop
-  uniqueAddresses: string[];   // Unique addresses prop
 }
 
-const getColorForScore = (score: number, overallScore: number | null): string => {
-  if (overallScore === null) {
-    return 'grey'; // Default color for unknown overall score
-  }
+const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions }) => {
+  const [summary, setSummary] = useState<TransactionSummary | null>(null);
+  const [updatedTransactions, setUpdatedTransactions] = useState<Transaction[]>([]);
 
-  if (score >= 850) {
-    return 'green';
-  } else if (score >= 740) {
-    return 'yellow';
-  } else if (score >= 670) {
-    return 'orange';
-  } else if (score >= 580) {
-    return 'red';
-  } else if (score >= 450) {
-    return 'black'; // Changed from 'mixed' to 'black' based on your provided criteria
-  } else {
-    return 'grey';
-  }
-};
+  useEffect(() => {
+    const fetchSummaryData = async () => {
+      if (transactions.length > 0) {
+        const addresses = transactions.map((tx) => tx.thirdPartyWallet);
+        try {
+          // Fetch transaction summary for the primary wallet address in the transactions list
+          const summaryData = await fetchTransactionSummary(transactions[0].thirdPartyWallet);
+          if (summaryData) {
+            setSummary(summaryData);
+          }
 
-const getCategoryForScore = (score: number): string => {
-  if (score >= 850) {
-    return 'Excellent';
-  } else if (score >= 740) {
-    return 'Good';
-  } else if (score >= 670) {
-    return 'Fair';
-  } else if (score >= 580) {
-    return 'Poor';
-  } else if (score >= 450) {
-    return 'Bad';
-  } else {
-    return 'New';
-  }
-};
+          // Check multiple addresses for flagged status
+          const checkResults = await checkMultipleAddresses(addresses);
 
-const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions, overallScore, uniqueAddresses }) => {
-  const sortedTransactions = [...transactions].sort((a, b) => b.thirdPartyIdacScore - a.thirdPartyIdacScore);
+          if (checkResults && Array.isArray(checkResults)) {
+            console.log("Multiple Addresses Check Results:", checkResults);
+
+            // Update transactions with flagged info from backend
+            const newTransactions = transactions.map((tx) => ({
+              ...tx,
+              flagged: checkResults.some(
+                (result: CheckAddressResult) =>
+                  result?.address?.toLowerCase() === tx.thirdPartyWallet.toLowerCase() &&
+                  result?.status === "Fail"
+              ),
+            }));
+            setUpdatedTransactions(newTransactions);
+          } else {
+            console.error("Check results are not in expected format:", checkResults);
+          }
+        } catch (error) {
+          console.error("Error fetching summary data:", error);
+        }
+      }
+    };
+
+    fetchSummaryData();
+  }, [transactions]);
+
+  const getStatus = (transaction: Transaction) => {
+    return transaction.flagged ? "Fail" : "Pass";
+  };
 
   return (
-    <div className="score-transactions">
-      <h2>Transaction History</h2>
-      <div className="table-container">
-        <div className="scroll-view">
-          {Array.isArray(transactions) && transactions.length > 0 ? (
-            <div className="table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Party Score</th>
-                    <th>Category</th>
-                    <th>Type</th>
-                    <th>Party Wallet</th>
-                    <th>Timestamp</th>
-                    <th>Crypto</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedTransactions.map((txn, index) => (
-                    <tr key={index}>
-                      <td className="score-transactions">
-                        <div className="txn-hex">
-                          <Image
-                            src={`/${getColorForScore(txn.thirdPartyIdacScore, overallScore)}.png`}
-                            alt="Hexagon"
-                            width={15}
-                            height={15}
-                          />
-                        </div>
-                        <div className="tab-score">{txn.thirdPartyIdacScore}</div>
-                      </td>
-                      <td className={getCategoryForScore(txn.thirdPartyIdacScore)}>
-                        {getCategoryForScore(txn.thirdPartyIdacScore)}
-                      </td>
-                      <td>{txn.type}</td>
-                      <td className="wallet">
-                        <div className="shortened-wallet" title={txn.thirdPartyWallet}>
-                          {shortenWalletAddress(txn.thirdPartyWallet)}
-                        </div>
-                      </td>
-                      <td>{txn.timestamp}</td>
-                      <td>{txn.cryptocurrency}</td>
-                      <td>${txn.usdAmount.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>No transactions available for the given address.</p>
-          )}
+    <div className="score-transactions w-full max-w-lg mx-auto my-4">
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        Transaction History
+      </h2>
+      {summary && (
+        <div className="summary mb-6">
+          <p>
+            Flagged Interactions:{" "}
+            {summary.number_of_interactions_with_flagged_addresses}
+          </p>
+          <p>Risky Transactions: {summary.number_of_risky_transactions}</p>
+          <p>Total Value: ${summary.total_value.toFixed(2)}</p>
+          <p>Dates Involved: {summary.all_dates_involved.join(", ")}</p>
         </div>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white rounded-lg shadow-md">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="py-2 px-4 border-b">Date</th>
+              <th className="py-2 px-4 border-b">Type</th>
+              <th className="py-2 px-4 border-b">Amount</th>
+              <th className="py-2 px-4 border-b">Status</th>
+              <th className="py-2 px-4 border-b">Involved Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {updatedTransactions.map((txn, index) => (
+              <tr
+                key={index}
+                className={`text-center ${
+                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                }`}
+              >
+                <td className="py-2 px-4 border-b">
+                  {new Date(txn.timestamp).toLocaleDateString()}
+                </td>
+                <td className="py-2 px-4 border-b">{txn.type}</td>
+                <td className="py-2 px-4 border-b">
+                  ${txn.usdAmount.toFixed(2)}
+                </td>
+                <td className="py-2 px-4 border-b">
+                  <span
+                    className={
+                      getStatus(txn) === "Pass"
+                        ? "text-green-500 font-bold"
+                        : "text-red-500 font-bold"
+                    }
+                  >
+                    {getStatus(txn)}
+                  </span>
+                </td>
+                <td className="py-2 px-4 border-b">{txn.thirdPartyWallet}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <style jsx>{`
-        .score-transactions {
-          margin-top: 20px;
-        }
-        .table-container {
-          overflow: auto; /* Enable both horizontal and vertical scroll */
-        }
-        .scroll-view {
-          max-height: 400px; /* Set max height for scroll view */
-          overflow: auto; /* Enable vertical scroll */
-        }
-        .table-responsive {
-          width: 100%;
-          overflow-x: auto; /* Enable horizontal scroll */
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        th, td {
-          border: 2px solid #ddd;
-          padding: 8px;
-          text-align: left;
-        }
-        .txn-hex {
-          margin-right: 8px;
-        }
-        .tab-score {
-          max-width: 100px;
-          color: white;
-        }
-        .wallet {
-          word-break: break-all;
-        }
-        .shortened-wallet {
-          max-width: 100px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        /* Media query for smaller screens */
-        @media (max-width: 600px) {
-          th, td {
-            font-size: 8px;
-            padding: 3px; /* Adjust padding for smaller screens */
-          }
-          .tab-score {
-            max-width: 25px; /* Adjust the maximum width for score */
-          }
-        }
-
-        /* Custom styles for category classes */
-        .Excellent {
-          color: green;
-        }
-        .Good {
-          color: yellow;
-        }
-        .Fair {
-          color: orange;
-        }
-        .Poor {
-          color: red;
-        }
-        .Bad {
-          color: white;
-        }
-        .New {
-          color: grey;
-        }
-      `}</style>
     </div>
   );
-};
-
-// Function to shorten a wallet address
-const shortenWalletAddress = (address: string): string => {
-  const prefixLength = 6; // Show the first 6 characters
-  const suffixLength = 4; // Show the last 4 characters
-
-  if (address.length <= prefixLength + suffixLength) {
-    return address; // If the address is short, return as is
-  }
-
-  const prefix = address.slice(0, prefixLength);
-  const suffix = address.slice(-suffixLength);
-
-  return `${prefix}...${suffix}`;
 };
 
 export default ScoreTxns;

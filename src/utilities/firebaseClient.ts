@@ -21,12 +21,14 @@ interface InsightsResponse {
 }
 
 const config = {
-  apiKey: "AIzaSyDEpLst3tiorsfPk2ZXiw-eGmSVlulxe1Y",
-  authDomain: "idefiai.firebaseapp.com",
-  projectId: "idefiai",
-  storageBucket: "idefiai.appspot.com",
-  messagingSenderId: "256088643029",
-  appId: "1:256088643029:web:85dfdd43c402dda5e3195c"
+  apiKey: "AIzaSyCA0bWMx3Ye76g1PXGVGh0qMdpqEFl8bK4",
+  authDomain: "idefi-ai-mup.firebaseapp.com",
+  projectId: "idefi-ai-mup",
+  storageBucket: "idefi-ai-mup.appspot.com",
+  databaseURL: "https://idefi-ai-mup-default-rtdb.firebaseio.com/",
+  messagingSenderId: "987289623268",
+  appId: "1:987289623268:web:ad12c8bd18c8734e64eaf1",
+  measurementId: "G-QKX9KR598W"
 };
 
 const app = initializeApp(config);

@@ -1,548 +1,439 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  pushTransaction,
-  pushAiInsights,
-  listenToTransactions,
-  storeUserId,
-} from '@/utilities/firebaseClient';
-import Head from 'next/head';
-import Image from 'next/image';
-import EthIDAC from '@/components/layouts/EthIDAC';
-import HexagonScore from '@/components/layouts/ScoreHexa';
-import ScoreTxns from '@/components/layouts/ScoreTxns';
-import CodeTerminal from '@/components/layouts/CodeTerminal';
-import {
-  fetchData,
-  generateInsights,
-  generateOpenAIPrompt,
-  fetchDataAndMetrics,
-} from '@/utilities/dataUtils';
+import React, { useState, useEffect } from "react";
+import Head from "next/head";
+import Image from "next/image";
+import ScoreTxns from "@/components/layouts/ScoreTxns";
+import CodeTerminal from "@/components/layouts/CodeTerminal";
+import { storeUserId, pushAiInsights } from "@/utilities/firebaseClient";
 import {
   checkFlaggedAddress,
-  quantumRiskAnalysis,
-  portfolioOptimization,
-} from '@/utilities/apiUtils';
-import { Bar } from 'react-chartjs-2';
-import web3 from '@/utilities/web3Utils';
+  fetchDataAndMetrics,
+  fetchEtherscanData,
+  isValidAddress,
+} from "@/utilities/apiUtils";
+import { connectWallet } from "@/utilities/web3Utils";
+import { generateInsights } from "@/utilities/dataUtils";
 
-// Define the Transaction type
-type TransactionType = 'Sent' | 'Received';
+interface Metric {
+  name: string;
+  value: number;
+  color: string;
+}
 
-// Define the Transaction interface
 interface Transaction {
+  id: string;
   timestamp: string;
-  type: TransactionType;
+  type: "Sent" | "Received";
   cryptocurrency: string;
-  thirdPartyIdacScore: number;
   usdAmount: number;
   thirdPartyWallet: string;
+  flagged: boolean;
+  risk: "High" | "Medium" | "Low" | "None";
 }
-
-interface InsightsResponse {
-  openAIResponse?: string | null; // Adjust the type based on the expected response
-  // Add other properties as needed
-}
-
-interface Metrics {
-  'Total ETH Sent': number;
-  'Total ETH Received': number;
-  'Average Gas Price (Gwei)': number;
-  'Capital Gains': number;
-  [key: string]: any;
-}
-
-const getColorForScore = (score: number): string => {
-  if (score >= 850) {
-    return 'green';
-  } else if (score >= 740) {
-    return 'yellow';
-  } else if (score >= 630) {
-    return 'orange';
-  } else if (score >= 410) {
-    return 'red';
-  } else if (score >= 310) {
-    return 'black';
-  } else {
-    return 'grey';
-  }
-};
 
 const DApp: React.FC = () => {
-  const mounted = useRef(false);
-  const [userAddress, setUserAddress] = useState('');
-  const [generatedScore, setGeneratedScore] = useState<number | null>(null);
-  const [insights, setInsights] = useState<string>('');
-  const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [uniqueAddresses, setUniqueAddresses] = useState<string[]>([]);
-  const [flaggedStatus, setFlaggedStatus] = useState<string | null>(null);
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [riskAnalysis, setRiskAnalysis] = useState<any>(null);
-  const [optimizedPortfolio, setOptimizedPortfolio] = useState<any>(null);
-  const otherAddress = ''; // Adjust this value based on your requirements
+  const [sourceAddress, setSourceAddress] = useState<string>("");
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
+  const [sourceInsights, setSourceInsights] = useState<string>("");
+  const [destinationInsights, setDestinationInsights] = useState<string>("");
+  const [connectedAccountSource, setConnectedAccountSource] = useState<string | null>(null);
+  const [connectedAccountDestination, setConnectedAccountDestination] = useState<string | null>(null);
+  const [sourceFlaggedStatus, setSourceFlaggedStatus] = useState<{ description: string, status: string } | null>(null);
+  const [destinationFlaggedStatus, setDestinationFlaggedStatus] = useState<{ description: string, status: string } | null>(null);
+  const [sourceTransactions, setSourceTransactions] = useState<Transaction[]>([]);
+  const [destinationTransactions, setDestinationTransactions] = useState<Transaction[]>([]);
+  const [loadingSource, setLoadingSource] = useState(false);
+  const [loadingDestination, setLoadingDestination] = useState(false);
+  const [sourceMetrics, setSourceMetrics] = useState<Metric[]>([]);
+  const [destinationMetrics, setDestinationMetrics] = useState<Metric[]>([]);
+  const [sourceStatus, setSourceStatus] = useState<"Pass" | "Fail" | null>(null);
+  const [destinationStatus, setDestinationStatus] = useState<"Pass" | "Fail" | null>(null);
+  const [loadingSourceStatus, setLoadingSourceStatus] = useState(false);
+  const [loadingDestinationStatus, setLoadingDestinationStatus] = useState(false);
+  const [loadingSourceInsights, setLoadingSourceInsights] = useState(false);
+  const [loadingDestinationInsights, setLoadingDestinationInsights] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [showSourceTransactions, setShowSourceTransactions] = useState(false);
+  const [showDestinationTransactions, setShowDestinationTransactions] = useState(false);
 
   useEffect(() => {
-    mounted.current = true;
-
-    // Listen to changes in transactions and update the state
-    listenToTransactions((data) => {
-      if (mounted.current) {
-        setTransactions(Array.isArray(data) ? data : []);
-      }
-    });
-
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (Array.isArray(transactions)) {
-      const addresses = new Set<string>();
-      transactions.forEach((tx) => {
-        addresses.add(tx.thirdPartyWallet);
-      });
-      setUniqueAddresses(Array.from(addresses));
+    if (connectedAccountSource) {
+      storeUserId(connectedAccountSource);
     }
-  }, [transactions]);
+  }, [connectedAccountSource]);
 
-  const isValidAddress = (address: string) => {
-    const ethRegExp = /^(0x)?[0-9a-fA-F]{40}$/;
-    const btcRegExp = /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/;
-    return ethRegExp.test(address) || btcRegExp.test(address);
-  };
+  useEffect(() => {
+    if (connectedAccountDestination) {
+      storeUserId(connectedAccountDestination);
+    }
+  }, [connectedAccountDestination]);
 
-  const handleAccountChange = (account: string | null) => {
-    setConnectedAccount(account);
-    setUserAddress(account || ''); // Set userAddress when account changes
-  };
-
-  const connectWallet = async () => {
+  const handleConnectWalletSource = async () => {
     try {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        window.location.href = 'https://idefi.ai/dapp'; // Redirect to the mobile wallet deep link
-      } else {
-        const accounts: string[] | null = await web3.eth.requestAccounts();
-        const fetchedAccount = accounts?.[0] || null;
-        setConnectedAccount(fetchedAccount);
-        setUserAddress(fetchedAccount || '');
-        window.location.reload();
+      const account = await connectWallet();
+      if (account) {
+        setConnectedAccountSource(account);
+        setSourceAddress(account);
+        storeUserId(account); // Store user ID for source
       }
     } catch (error: any) {
-      console.error('Error connecting wallet:', error.message);
+      console.error("Error connecting wallet:", error.message);
+      setAlertMessage("Failed to connect wallet. Please try again.");
     }
   };
 
-  useEffect(() => {
-    const fetchAccount = async () => {
-      try {
-        const accounts: string[] | null = await web3.eth.getAccounts();
-        const fetchedAccount = accounts?.[0] || null;
-        setConnectedAccount(fetchedAccount);
-        setUserAddress(fetchedAccount || ''); // Set userAddress when account changes
-      } catch (error: any) {
-        console.error('Error fetching account:', error.message);
+  const handleConnectWalletDestination = async () => {
+    try {
+      const account = await connectWallet();
+      if (account) {
+        setConnectedAccountDestination(account);
+        setDestinationAddress(account);
+        storeUserId(account); // Store user ID for destination
       }
-    };
-
-    // Fetch account only if mounted and there is no connected account
-    if (mounted.current && !connectedAccount) {
-      fetchAccount();
+    } catch (error: any) {
+      console.error("Error connecting wallet:", error.message);
+      setAlertMessage("Failed to connect wallet. Please try again.");
     }
-  }, [connectedAccount]);
+  };
 
-  const handleGenerateScore = async () => {
-    // Determine the address to use
-    const addressToUse = connectedAccount || userAddress;
-
+  const handleGenerateStatus = async (isSource: boolean) => {
+    const addressToUse = isSource
+      ? connectedAccountSource || sourceAddress
+      : connectedAccountDestination || destinationAddress;
+  
     if (!isValidAddress(addressToUse)) {
-      alert('Invalid Address. Please enter a valid address.');
+      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
       return;
     }
-
-    // Fetch transaction data
-    const fetchedTransactions = await fetchData(addressToUse, 'eth');
-
-    if (
-      fetchedTransactions &&
-      Array.isArray(fetchedTransactions) &&
-      fetchedTransactions.length > 0
-    ) {
-      // Store user ID in Firebase
-      storeUserId({ userId: addressToUse });
-
-      // Push each transaction individually to Firebase
-      fetchedTransactions.forEach((transaction) => {
-        pushTransaction(transaction);
-      });
-
-      // Set transactions state for ScoreTxns component
-      setTransactions(fetchedTransactions);
-
-      // Generate and set the score
-      const score = generateScore(addressToUse);
-      setGeneratedScore(score);
-
-      alert('Transaction history loaded successfully!');
-
-      try {
-        // Generate OpenAI prompt based on transactions
-        const openAIPrompt = generateOpenAIPrompt(
-          addressToUse,
-          otherAddress,
-          fetchedTransactions,
-          score
-        );
-
-        // Generate and set insights
-        const insightsResponse = await generateInsights(
-          addressToUse,
-          otherAddress,
-          openAIPrompt,
-          score
-        );
-
-        // Log the insightsResponse for debugging
-        console.log('Insights response:', insightsResponse);
-
-        if (insightsResponse) {
-          if (typeof insightsResponse === 'string') {
-            // Set insights only if it's a string (not null)
-            setInsights(insightsResponse);
-
-            // Push insights to Firebase
-            pushAiInsights({
-              userAddress: addressToUse,
-              insights: insightsResponse,
-              timestamp: Date.now(),
-            });
-          } else {
-            console.error('Invalid insights response:', insightsResponse);
-          }
-        } else {
-          console.error('Insights response is null.');
-        }
-      } catch (error) {
-        console.error('Error generating insights:', error);
+  
+    try {
+      if (isSource) {
+        setLoadingSource(true);
+        setLoadingSourceStatus(true);
+        setLoadingSourceInsights(true);
+      } else {
+        setLoadingDestination(true);
+        setLoadingDestinationStatus(true);
+        setLoadingDestinationInsights(true);
       }
-
-      // Check if the address is flagged
+  
+      // Fetch flagged status and get details
       const flaggedResponse = await checkFlaggedAddress(addressToUse);
-      if (flaggedResponse && flaggedResponse.description) {
-        setFlaggedStatus(flaggedResponse.description);
-      } else {
-        setFlaggedStatus('No information available.');
-      }
-
-      // Fetch data and metrics
-      const metricsResponse = await fetchDataAndMetrics(addressToUse);
-      if (metricsResponse) {
-        setMetrics(metricsResponse.metrics);
-      } else {
-        console.error('Failed to fetch metrics data.');
-      }
-    } else {
-      // Handle case where there are no transactions
-      setTransactions([]); // Set transactions to an empty array
-
-      // Set generated score to null or any default value
-      setGeneratedScore(null);
-
-      // Optionally, you can set a message or take other actions to inform the user
-      console.log('No transactions available for the given address.');
-      alert('No transactions or score available for the given address.');
-    }
-  };
-
-  const fetchAiInsights = async () => {
-    const addressToUse = connectedAccount || userAddress;
-
-    if (!isValidAddress(addressToUse)) {
-      alert('Invalid Address. Please enter a valid address.');
-      return;
-    }
-
-    // Fetch transaction data
-    const fetchedTransactions = await fetchData(addressToUse, 'eth');
-
-    if (
-      fetchedTransactions &&
-      Array.isArray(fetchedTransactions) &&
-      fetchedTransactions.length > 0
-    ) {
-      try {
-        // Generate OpenAI prompt based on transactions
-        if (generatedScore !== null) {
-          const openAIPrompt = generateOpenAIPrompt(
-            addressToUse,
-            otherAddress,
-            fetchedTransactions,
-            generatedScore
-          );
-
-          // Generate and set insights
-          const insightsResponse = await generateInsights(
-            addressToUse,
-            otherAddress,
-            openAIPrompt,
-            generatedScore
-          );
-
-          // Log the insightsResponse for debugging
-          console.log('Insights response:', insightsResponse);
-
-          if (insightsResponse) {
-            if (typeof insightsResponse === 'string') {
-              // Set insights only if it's a string (not null)
-              setInsights(insightsResponse);
-            } else {
-              console.error('Invalid insights response:', insightsResponse);
-            }
-          } else {
-            console.error('Insights response is null.');
-          }
+      if (flaggedResponse) {
+        const { status, description, metrics, transactions } = flaggedResponse;
+  
+        if (isSource) {
+          setSourceFlaggedStatus({ description, status });
+          setSourceStatus(status);
+          setSourceMetrics(metrics || []);
+          setSourceTransactions(transactions || []);
+        } else {
+          setDestinationFlaggedStatus({ description, status });
+          setDestinationStatus(status);
+          setDestinationMetrics(metrics || []);
+          setDestinationTransactions(transactions || []);
         }
-      } catch (error) {
-        console.error('Error generating insights:', error);
+  
+        // Ensure transactions is not undefined
+        const txns = transactions || [];
+        
+        // Generate AI Insights
+        const insights = await generateInsights(addressToUse, txns, status);
+        const insightsText = insights || "No significant insights available.";
+  
+        if (isSource) {
+          setSourceInsights(insightsText);
+        } else {
+          setDestinationInsights(insightsText);
+        }
+  
+        // Push AI Insights to Firebase
+        await pushAiInsights({
+          userAddress: addressToUse,
+          insights: insightsText,
+          timestamp: Date.now(),
+        });
+  
+        setAlertMessage(null); // Clear any alert on success
+      } else {
+        throw new Error('No data received from checkFlaggedAddress');
       }
-    } else {
-      console.log('No transactions available for the given address.');
-      alert('No transactions available for the given address.');
+    } catch (error) {
+      console.error("Error during status generation:", error);
+      setAlertMessage("Failed to generate status. Please check the address and try again.");
+    } finally {
+      if (isSource) {
+        setLoadingSource(false);
+        setLoadingSourceStatus(false);
+        setLoadingSourceInsights(false);
+      } else {
+        setLoadingDestination(false);
+        setLoadingDestinationStatus(false);
+        setLoadingDestinationInsights(false);
+      }
     }
   };
-
-  const checkAddressFlaggedStatus = async () => {
-    const addressToUse = connectedAccount || userAddress;
+  
+  const handleLoadTransactions = async (isSource: boolean) => {
+    const addressToUse = isSource
+      ? connectedAccountSource || sourceAddress
+      : connectedAccountDestination || destinationAddress;
 
     if (!isValidAddress(addressToUse)) {
-      alert('Invalid Address. Please enter a valid address.');
+      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
       return;
     }
 
-    // Check if the address is flagged
-    const flaggedResponse = await checkFlaggedAddress(addressToUse);
-    if (flaggedResponse && flaggedResponse.description) {
-      setFlaggedStatus(flaggedResponse.description);
+    if (isSource) {
+      setLoadingSource(true);
     } else {
-      setFlaggedStatus('No information available.');
+      setLoadingDestination(true);
     }
-  };
-
-  const fetchDataAndMetricsInfo = async () => {
-    const addressToUse = connectedAccount || userAddress;
-
-    if (!isValidAddress(addressToUse)) {
-      alert('Invalid Address. Please enter a valid address.');
-      return;
-    }
-
-    const metricsResponse = await fetchDataAndMetrics(addressToUse);
-    if (metricsResponse) {
-      setMetrics(metricsResponse.metrics);
-    } else {
-      console.error('Failed to fetch metrics data.');
-    }
-  };
-
-  const performQuantumRiskAnalysis = async () => {
-    const portfolio = transactions.map((tx) => ({
-      value: tx.usdAmount,
-      wallet: tx.thirdPartyWallet,
-    }));
 
     try {
-      const response = await quantumRiskAnalysis(portfolio);
-      setRiskAnalysis(response.risk_analysis);
+      // Fetch and set transactions
+      const transactions = await fetchEtherscanData(addressToUse);
+      if (transactions) {
+        if (isSource) {
+          setSourceTransactions(transactions);
+        } else {
+          setDestinationTransactions(transactions);
+        }
+      }
+
+      setAlertMessage(null); // Clear any alert on success
     } catch (error) {
-      console.error('Error performing quantum risk analysis:', error);
+      console.error("Error during transactions loading:", error);
+      setAlertMessage("Failed to load transactions. Please try again.");
+    } finally {
+      if (isSource) {
+        setLoadingSource(false);
+      } else {
+        setLoadingDestination(false);
+      }
     }
   };
 
-  const performPortfolioOptimization = async () => {
-    const portfolio = transactions.map((tx) => ({
-      value: tx.usdAmount,
-      wallet: tx.thirdPartyWallet,
-    }));
-
-    try {
-      const response = await portfolioOptimization(portfolio);
-      setOptimizedPortfolio(response.optimized_portfolio);
-    } catch (error) {
-      console.error('Error performing portfolio optimization:', error);
-    }
+  const clearSourceResults = () => {
+    setSourceMetrics([]);
+    setSourceTransactions([]);
+    setSourceStatus(null);
+    setSourceInsights("");
+    setSourceFlaggedStatus(null);
+    setSourceAddress("");
+    setConnectedAccountSource(null);
+    setAlertMessage(null);
   };
 
-  const generateScore = (address: string): number => {
-    const hash = hashCode(address);
-    const uniqueScore = Math.abs(hash) % 851;
-    return uniqueScore;
-  };
-
-  const hashCode = (str: string): number => {
-    let hash = 0;
-    for (let i = 0; str && i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-    }
-    return hash;
-  };
-
-  const chartData = {
-    labels: Array.isArray(transactions)
-      ? transactions.map((tx) =>
-          new Date(tx.timestamp).toLocaleDateString()
-        )
-      : [],
-    datasets: [
-      {
-        label: 'Transaction Amount (USD)',
-        data: Array.isArray(transactions)
-          ? transactions.map((tx) => tx.usdAmount)
-          : [],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1,
-      },
-    ],
+  const clearDestinationResults = () => {
+    setDestinationMetrics([]);
+    setDestinationTransactions([]);
+    setDestinationStatus(null);
+    setDestinationInsights("");
+    setDestinationFlaggedStatus(null);
+    setDestinationAddress("");
+    setConnectedAccountDestination(null);
+    setAlertMessage(null);
   };
 
   return (
-    <div className="main-container flex flex-col items-center justify-center min-h-screen bg-white text-center">
+    <div className="min-h-screen bg-background-color flex flex-col items-center text-center p-6">
       <Head>
         <title>MUP</title>
       </Head>
-      <section className="flex flex-col items-center justify-center py-12">
+      <section className="flex flex-col items-center justify-center py-8 px-4 w-full max-w-6xl bg-white shadow-lg rounded-lg">
+        {alertMessage && (
+          <div className="alert">
+            {alertMessage}
+          </div>
+        )}
         <div className="mb-6">
           <Image
             src="/brandlogo.png"
             alt="brand logo"
-            width={200}
-            height={200}
+            width={150}
+            height={150}
+            className="mx-auto"
           />
         </div>
-        <h4 className="text-lg mb-16">Connect wallet or enter address</h4>
-        <input
-          type="text"
-          placeholder=" ENTER ADDRESS"
-          value={userAddress}
-          onChange={(e) => setUserAddress(e.target.value)}
-          className="text-center p-2 border rounded mb-4"
-        />
-        <div className="flex items-center justify-center mb-4">
-          <button
-            onClick={connectWallet}
-            className="bg-neorange text-white font-bold py-2 px-4 rounded mr-2"
-          >
-            Connect Wallet
-          </button>
-          <button
-            onClick={handleGenerateScore}
-            className="bg-neorange text-white font-bold py-2 px-4 rounded"
-          >
-            Generate Score
-          </button>
-        </div>
-        <EthIDAC seed={userAddress} onAccountChange={handleAccountChange} />
-        <hr className="border-t border-gray-300 w-full mb-12 mt-12" />
-        {generatedScore !== null && (
-          <div className={`mb-6 text-${getColorForScore(generatedScore)}`}>
-            <HexagonScore
-              seed={userAddress.toLowerCase()}
-              generatedScore={generatedScore}
+        <h4 className="text-2xl font-semibold mb-8">
+          Connect Wallet or Enter Addresses
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
+          <div className="flex flex-col items-center p-4 border border-gray-200 rounded-md shadow-sm">
+            <h5 className="text-xl font-medium mb-4">Source</h5>
+            <input
+              type="text"
+              placeholder="Enter Source Address"
+              value={sourceAddress}
+              onChange={(e) => setSourceAddress(e.target.value)}
+              className="input-text w-full mb-4"
             />
+            <div className="flex flex-col space-y-2 w-full">
+              <button onClick={handleConnectWalletSource} className="button">
+                Connect Wallet
+              </button>
+              <button onClick={() => handleGenerateStatus(true)} className="button">
+                {loadingSource ? "Loading..." : "Check Status"}
+              </button>
+              <button onClick={() => handleLoadTransactions(true)} className="button-secondary">
+                {showSourceTransactions ? "Reload Transactions" : "Load Transactions"}
+              </button>
+              <button onClick={() => setShowSourceTransactions(!showSourceTransactions)} className="button-secondary">
+                {showSourceTransactions ? "Hide Transactions" : "Show Transactions"}
+              </button>
+              <button onClick={clearSourceResults} className="button-clear">
+                Clear
+              </button>
+            </div>
           </div>
-        )}
-        {generatedScore !== null && transactions.length > 0 && (
-          <ScoreTxns
-            transactions={transactions}
-            uniqueAddresses={uniqueAddresses}
-            overallScore={generatedScore}
-          />
-        )}
-        {generatedScore !== null && transactions.length === 0 && (
-          <p className="text-red-500">
-            No transactions available for the given address.
-          </p>
-        )}
-        <div className="header container mb-6">
-          <h2 className="text-xl font-bold mb-2">iDeFi.AI Insights:</h2>
-          <CodeTerminal>{insights}</CodeTerminal>
+          <div className="flex flex-col items-center p-4 border border-gray-200 rounded-md shadow-sm">
+            <h5 className="text-xl font-medium mb-4">Destination</h5>
+            <input
+              type="text"
+              placeholder="Enter Destination Address (Optional)"
+              value={destinationAddress}
+              onChange={(e) => setDestinationAddress(e.target.value)}
+              className="input-text w-full mb-4"
+            />
+            <div className="flex flex-col space-y-2 w-full">
+              <button onClick={handleConnectWalletDestination} className="button">
+                Connect Wallet
+              </button>
+              <button onClick={() => handleGenerateStatus(false)} className="button">
+                {loadingDestination ? "Loading..." : "Check Status"}
+              </button>
+              <button onClick={() => handleLoadTransactions(false)} className="button-secondary">
+                {showDestinationTransactions ? "Reload Transactions" : "Load Transactions"}
+              </button>
+              <button onClick={() => setShowDestinationTransactions(!showDestinationTransactions)} className="button-secondary">
+                {showDestinationTransactions ? "Hide Transactions" : "Show Transactions"}
+              </button>
+              <button onClick={clearDestinationResults} className="button-clear">
+                Clear
+              </button>
+            </div>
+          </div>
         </div>
-        {flaggedStatus && (
-          <div className="header container mb-6">
-            <h2 className="text-xl font-bold mb-2">Flagged Status:</h2>
-            <p>{flaggedStatus}</p>
-          </div>
-        )}
-        {metrics && (
-          <div className="header container mb-6">
-            <h2 className="text-xl font-bold mb-2">Metrics:</h2>
-            <ul className="list-disc list-inside">
-              {Object.entries(metrics).map(([key, value]) => (
-                <li key={key} className="text-lg mb-2">{`${key}: ${value}`}</li>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+          <div className="bg-white shadow-md rounded-lg p-4">
+            <h2 className="section-header">Source Address Results</h2>
+            {loadingSourceStatus ? (
+              <p className="text-lg mt-4 font-medium">Loading status...</p>
+            ) : (
+              sourceStatus && (
+                <p className="text-lg mt-4 font-medium">
+                  Status:{" "}
+                  <span className={sourceStatus === "Pass" ? "pass-indicator" : "fail-indicator"}>
+                    {sourceStatus}
+                  </span>
+                </p>
+              )
+            )}
+            {sourceMetrics.length > 0 &&
+              sourceMetrics.map((metric, index) => (
+                <div key={index} className={`w-full p-2 text-lg font-medium ${metric.color}`}>
+                  {metric.name}: {metric.value}
+                </div>
               ))}
-            </ul>
+            {sourceFlaggedStatus && (
+              <div
+                className={`flagged-status my-8 p-4 ${
+                  sourceFlaggedStatus.status === "Fail" ? "bg-red-100 border-red-300" : "bg-green-100 border-green-300"
+                } rounded-md shadow-sm`}
+              >
+                <h2
+                  className={`section-header ${
+                    sourceFlaggedStatus.status === "Fail" ? "text-red-700" : "text-green-700"
+                  } flex items-center`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    className="w-6 h-6 mr-2"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.054 0 1.918-.816 1.995-1.851L21 18V6c0-1.054-.816-1.918-1.851-1.995L19 4H5c-1.054 0-1.918.816-1.995 1.851L3 6v12c0 1.054.816 1.918 1.851 1.995L5 20zm13 0H6" />
+                  </svg>
+                  {sourceFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
+                </h2>
+                <p className={`text-base ${sourceFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
+                  {sourceFlaggedStatus.description}
+                </p>
+              </div>
+            )}
+            {showSourceTransactions && sourceTransactions.length > 0 && (
+              <ScoreTxns transactions={sourceTransactions} />
+            )}
+            <div className="insights-container mt-8">
+              <h2 className="section-header">Key Insights for Source:</h2>
+              <CodeTerminal>
+                {loadingSourceInsights ? "Loading insights..." : sourceInsights || "No significant insights available."}
+              </CodeTerminal>
+            </div>
           </div>
-        )}
-        {transactions.length > 0 && (
-          <div className="w-full md:w-2/3 lg:w-1/2 mx-auto mb-8">
-            <Bar data={chartData} />
+          <div className="bg-white shadow-md rounded-lg p-4">
+            <h2 className="section-header">Destination Address Results</h2>
+            {loadingDestinationStatus ? (
+              <p className="text-lg mt-4 font-medium">Loading status...</p>
+            ) : (
+              destinationStatus && (
+                <p className="text-lg mt-4 font-medium">
+                  Status:{" "}
+                  <span className={destinationStatus === "Pass" ? "pass-indicator" : "fail-indicator"}>
+                    {destinationStatus}
+                  </span>
+                </p>
+              )
+            )}
+            {destinationMetrics.length > 0 &&
+              destinationMetrics.map((metric, index) => (
+                <div key={index} className={`w-full p-2 text-lg font-medium ${metric.color}`}>
+                  {metric.name}: {metric.value}
+                </div>
+              ))}
+            {destinationFlaggedStatus && (
+              <div
+                className={`flagged-status my-8 p-4 ${
+                  destinationFlaggedStatus.status === "Fail" ? "bg-red-100 border-red-300" : "bg-green-100 border-green-300"
+                } rounded-md shadow-sm`}
+              >
+                <h2
+                  className={`section-header ${
+                    destinationFlaggedStatus.status === "Fail" ? "text-red-700" : "text-green-700"
+                  } flex items-center`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    className="w-6 h-6 mr-2"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.054 0 1.918-.816 1.995-1.851L21 18V6c0-1.054-.816-1.918-1.851-1.995L19 4H5c-1.054 0-1.918.816-1.995 1.851L3 6v12c0 1.054.816 1.918 1.851 1.995L5 20zm13 0H6" />
+                  </svg>
+                  {destinationFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
+                </h2>
+                <p className={`text-base ${destinationFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
+                  {destinationFlaggedStatus.description}
+                </p>
+              </div>
+            )}
+            {showDestinationTransactions && destinationTransactions.length > 0 && (
+              <ScoreTxns transactions={destinationTransactions} />
+            )}
+            <div className="insights-container mt-8">
+              <h2 className="section-header">Key Insights for Destination:</h2>
+              <CodeTerminal>
+                {loadingDestinationInsights ? "Loading insights..." : destinationInsights || "No significant insights available."}
+              </CodeTerminal>
+            </div>
           </div>
-        )}
-        <div className="flex flex-col md:flex-row items-center justify-center mt-4 space-y-2 md:space-y-0 md:space-x-2">
-          <button
-            onClick={fetchAiInsights}
-            className="bg-neorange text-white font-bold py-2 px-4 rounded"
-          >
-            Fetch AI Insights
-          </button>
-          <button
-            onClick={checkAddressFlaggedStatus}
-            className="bg-neohover text-white font-bold py-2 px-4 rounded"
-          >
-            Check Flagged Status
-          </button>
-          <button
-            onClick={fetchDataAndMetricsInfo}
-            className="bg-neodark text-white font-bold py-2 px-4 rounded"
-          >
-            Fetch Data and Metrics
-          </button>
-          <button
-            onClick={performQuantumRiskAnalysis}
-            className="bg-neodark text-white font-bold py-2 px-4 rounded"
-          >
-            Quantum Risk Analysis
-          </button>
-          <button
-            onClick={performPortfolioOptimization}
-            className="bg-neodark text-white font-bold py-2 px-4 rounded"
-          >
-            Portfolio Optimization
-          </button>
         </div>
-        {riskAnalysis && (
-          <div className="header container mb-6">
-            <h2 className="text-xl font-bold mb-2">
-              Quantum Risk Analysis Results:
-            </h2>
-            <pre className="text-left">
-              {JSON.stringify(riskAnalysis, null, 2)}
-            </pre>
-          </div>
-        )}
-        {optimizedPortfolio && (
-          <div className="header container mb-6">
-            <h2 className="text-xl font-bold mb-2">Optimized Portfolio:</h2>
-            <pre className="text-left">
-              {JSON.stringify(optimizedPortfolio, null, 2)}
-            </pre>
-          </div>
-        )}
       </section>
     </div>
   );

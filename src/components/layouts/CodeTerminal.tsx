@@ -15,7 +15,7 @@ export const CodeTerminal: React.FC<CodeTerminalProps> = ({ children }) => {
     <div
       id='App:CodeTerminal'
       style={{
-        backgroundColor: '#eee',
+        backgroundColor: '#000',
         padding: '1em',
         borderRadius: '5px',
         borderColor: '#ff9f66',

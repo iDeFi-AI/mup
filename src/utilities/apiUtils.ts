@@ -1,36 +1,43 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Fetch transactions from the backend API
-export const fetchTransactionsFromApi = async (address: string) => {
-  try {
-    const response = await axios.get('/api/fetch-transactions', {
-      params: { address },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching transactions:', error);
-    return null;
+// Define the Transaction type to use consistently
+export interface Transaction {
+  id: string;
+  timestamp: string;
+  type: 'Sent' | 'Received';
+  cryptocurrency: string;
+  usdAmount: number;
+  thirdPartyWallet: string;
+  flagged: boolean;
+  risk: 'High' | 'Medium' | 'Low' | 'None';
+}
+
+// Utility function to validate Ethereum address
+export const isValidAddress = (address: string) => {
+  const ethRegExp = /^(0x)?[0-9a-fA-F]{40}$/;
+  return ethRegExp.test(address);
+};
+
+// Map risk level to one of the specific string literals
+const mapRiskLevel = (risk: string): 'High' | 'Medium' | 'Low' | 'None' => {
+  switch (risk.toLowerCase()) {
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    case 'low':
+      return 'Low';
+    case 'none':
+    default:
+      return 'None';
   }
 };
 
-// Check if the address is flagged
-export const checkFlaggedAddress = async (address: string) => {
-  try {
-    const response = await axios.get('/api/check-flagged-address', {
-      params: { address },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error checking flagged address:', error);
-    return null;
-  }
-};
-
-// Fetch data and metrics from the backend API
+// Fetch transactions and metrics from the backend API
 export const fetchDataAndMetrics = async (address: string) => {
   try {
-    const response = await axios.get('/api/get_data_and_metrics', {
-      params: { address },
+    const response = await axios.get('/api/endpoints', {
+      params: { endpoint: 'get_data_and_metrics', address },
     });
     return response.data;
   } catch (error) {
@@ -39,80 +46,93 @@ export const fetchDataAndMetrics = async (address: string) => {
   }
 };
 
-// Quantum API: Perform quantum risk analysis
-export const quantumRiskAnalysis = async (portfolio: any) => {
+// Fetch transaction summary from the backend API
+export const fetchTransactionSummary = async (address: string) => {
   try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'quantumRiskAnalysis', portfolio: JSON.stringify(portfolio) },
+    const response = await axios.post('/api/endpoints', {
+      endpoint: 'transaction_summary',
+      address,
     });
     return response.data;
   } catch (error) {
-    console.error('Error performing quantum risk analysis:', error);
+    console.error('Error fetching transaction summary:', error);
     return null;
   }
 };
 
-// Quantum API: Perform portfolio optimization
-export const portfolioOptimization = async (portfolio: any) => {
+
+// Check if the address is flagged
+export const checkFlaggedAddress = async (address: string) => {
   try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'portfolioOptimization', portfolio: JSON.stringify(portfolio) },
+    const response = await axios.get('/api/endpoints', {
+      params: { endpoint: 'checkaddress', address },
     });
     return response.data;
   } catch (error) {
-    console.error('Error performing portfolio optimization:', error);
+    console.error('Error checking flagged address:', error);
     return null;
   }
 };
 
-// Quantum API: Compile and run a QASM file
-export const compileAndRunQASM = async (filename: string, useIBMBackend: boolean = false) => {
+// Fetch transactions from Etherscan directly
+export const fetchEtherscanData = async (
+  address: string
+): Promise<Transaction[]> => {
+  const ethApiKey = 'QEX6DGCMDRPXRU89FKPUR4BG9AUMCR4FXD';
+  const ethUrl = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${ethApiKey}`;
+
   try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'compileAndRunQASM', filename, useIBMBackend: useIBMBackend.toString() },
+    const ethResponse = await axios.get(ethUrl);
+    const ethData = ethResponse.data;
+
+    if (ethData.status === '1') {
+      return ethData.result.map((tx: any, index: number) => ({
+        id: tx.hash || index.toString(), // Use transaction hash as ID or index as fallback
+        timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString(),
+        type: address.toLowerCase() === tx.from.toLowerCase() ? 'Sent' : 'Received',
+        cryptocurrency: 'ETH',
+        usdAmount: parseFloat(tx.value) / 1e18,
+        thirdPartyWallet: address.toLowerCase() === tx.from.toLowerCase() ? tx.to : tx.from,
+        flagged: false,
+        risk: mapRiskLevel(tx.risk || 'None'), // Ensure the risk is mapped correctly
+      }));
+    } else {
+      console.error('Error fetching Etherscan data:', ethData.message);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching Etherscan data:', error);
+    return [];
+  }
+};
+
+// Check multiple addresses for flagged or suspicious activities
+export const checkMultipleAddresses = async (addresses: string[]) => {
+  try {
+    const response = await axios.post('/api/endpoints', {
+      endpoint: 'check_multiple_addresses',
+      addresses,
     });
     return response.data;
   } catch (error) {
-    console.error('Error compiling and running QASM:', error);
+    console.error('Error checking multiple addresses:', error);
     return null;
   }
 };
 
-// Quantum API: Initialize quantum memory
-export const initializeQuantumMemory = async () => {
+// Analyze transactions with the backend API
+export const analyzeTransactions = async (address: string, transactions: Transaction[]) => {
   try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'initializeQuantumMemory' },
+    const response = await axios.post('/api/endpoints', {
+      endpoint: 'analyze_transactions',
+      address,
+      transactions,
     });
     return response.data;
   } catch (error) {
-    console.error('Error initializing quantum memory:', error);
+    console.error('Error analyzing transactions:', error);
     return null;
   }
 };
 
-// Quantum API: Store a quantum state in memory
-export const storeQuantumStateInMemory = async (state: string) => {
-  try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'storeQuantumStateInMemory', state },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error storing quantum state in memory:', error);
-    return null;
-  }
-};
 
-// Quantum API: Retrieve the quantum state from memory
-export const retrieveQuantumStateFromMemory = async () => {
-  try {
-    const response = await axios.get('/api/quantum', {
-      params: { action: 'retrieveQuantumStateFromMemory' },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error retrieving quantum state from memory:', error);
-    return null;
-  }
-};
