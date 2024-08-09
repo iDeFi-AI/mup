@@ -135,11 +135,8 @@ const DApp: React.FC = () => {
           setDestinationTransactions(transactions || []);
         }
   
-        // Ensure transactions is not undefined
-        const txns = transactions || [];
-        
         // Generate AI Insights
-        const insights = await generateInsights(addressToUse, txns, status);
+        const insights = await generateInsights(addressToUse, transactions, status);
         const insightsText = insights || "No significant insights available.";
   
         if (isSource) {
@@ -174,7 +171,7 @@ const DApp: React.FC = () => {
       }
     }
   };
-  
+
   const handleLoadTransactions = async (isSource: boolean) => {
     const addressToUse = isSource
       ? connectedAccountSource || sourceAddress
