@@ -157,6 +157,30 @@ body {
   font-weight: bold;
 }
 
+.summary-card {
+  border: 1px solid #ddd;
+}
+
+.summary-item {
+  align-items: center;
+}
+
+.text-primary-color {
+  color: var(--primary-color);
+}
+
+.text-danger-color {
+  color: var(--danger-color);
+}
+
+.text-warning-color {
+  color: #ffc107; /* Warning yellow */
+}
+
+.text-success-color {
+  color: var(--success-color);
+}
+
 /* Responsive font sizes */
 @media (min-width: 640px) {
   .flagged-status p {

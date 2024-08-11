@@ -69,34 +69,6 @@ const DApp: React.FC = () => {
     }
   }, [connectedAccountDestination]);
 
-  const handleConnectWalletSource = async () => {
-    try {
-      const account = await connectWallet();
-      if (account) {
-        setConnectedAccountSource(account);
-        setSourceAddress(account);
-        storeUserId(account); // Store user ID for source
-      }
-    } catch (error: any) {
-      console.error("Error connecting wallet:", error.message);
-      setAlertMessage("Failed to connect wallet. Please try again.");
-    }
-  };
-
-  const handleConnectWalletDestination = async () => {
-    try {
-      const account = await connectWallet();
-      if (account) {
-        setConnectedAccountDestination(account);
-        setDestinationAddress(account);
-        storeUserId(account); // Store user ID for destination
-      }
-    } catch (error: any) {
-      console.error("Error connecting wallet:", error.message);
-      setAlertMessage("Failed to connect wallet. Please try again.");
-    }
-  };
-
   const handleGenerateStatus = async (isSource: boolean) => {
     const addressToUse = isSource
       ? connectedAccountSource || sourceAddress
@@ -111,11 +83,9 @@ const DApp: React.FC = () => {
       if (isSource) {
         setLoadingSource(true);
         setLoadingSourceStatus(true);
-        setLoadingSourceInsights(true);
       } else {
         setLoadingDestination(true);
         setLoadingDestinationStatus(true);
-        setLoadingDestinationInsights(true);
       }
   
       // Fetch flagged status and get details
@@ -134,27 +104,13 @@ const DApp: React.FC = () => {
           setDestinationMetrics(metrics || []);
           setDestinationTransactions(transactions || []);
         }
-  
-        // Generate AI Insights
-        const insights = await generateInsights(addressToUse, transactions, status);
-        const insightsText = insights || "No significant insights available.";
-  
-        if (isSource) {
-          setSourceInsights(insightsText);
-        } else {
-          setDestinationInsights(insightsText);
-        }
-  
-        // Push AI Insights to Firebase
-        await pushAiInsights({
-          userAddress: addressToUse,
-          insights: insightsText,
-          timestamp: Date.now(),
-        });
+
+        // Store user ID (address) for analytics or logging purposes
+        storeUserId(addressToUse);
   
         setAlertMessage(null); // Clear any alert on success
       } else {
-        throw new Error('No data received from checkFlaggedAddress');
+        throw new Error("No data received from checkFlaggedAddress");
       }
     } catch (error) {
       console.error("Error during status generation:", error);
@@ -163,10 +119,54 @@ const DApp: React.FC = () => {
       if (isSource) {
         setLoadingSource(false);
         setLoadingSourceStatus(false);
-        setLoadingSourceInsights(false);
       } else {
         setLoadingDestination(false);
         setLoadingDestinationStatus(false);
+      }
+    }
+  };
+
+  const handleGenerateInsights = async (isSource: boolean) => {
+    const addressToUse = isSource ? sourceAddress : destinationAddress;
+    const transactionsToUse = isSource ? sourceTransactions : destinationTransactions;
+    const statusToUse = isSource ? sourceStatus : destinationStatus;
+
+    if (!isValidAddress(addressToUse)) {
+      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
+      return;
+    }
+
+    if (isSource) {
+      setLoadingSourceInsights(true);
+    } else {
+      setLoadingDestinationInsights(true);
+    }
+
+    try {
+      const insights = await generateInsights(addressToUse, transactionsToUse, statusToUse ?? "None");
+      const insightsText = insights || "No significant insights available.";
+
+      if (isSource) {
+        setSourceInsights(insightsText);
+      } else {
+        setDestinationInsights(insightsText);
+      }
+
+      // Push AI Insights to Firebase
+      await pushAiInsights({
+        userAddress: addressToUse,
+        insights: insightsText,
+        timestamp: Date.now(),
+      });
+
+      setAlertMessage(null); // Clear any alert on success
+    } catch (error) {
+      console.error("Error generating insights:", error);
+      setAlertMessage("Failed to generate insights. Please try again.");
+    } finally {
+      if (isSource) {
+        setLoadingSourceInsights(false);
+      } else {
         setLoadingDestinationInsights(false);
       }
     }
@@ -194,8 +194,10 @@ const DApp: React.FC = () => {
       if (transactions) {
         if (isSource) {
           setSourceTransactions(transactions);
+          setShowSourceTransactions(true); // Automatically show transactions after loading
         } else {
           setDestinationTransactions(transactions);
+          setShowDestinationTransactions(true); // Automatically show transactions after loading
         }
       }
 
@@ -220,6 +222,7 @@ const DApp: React.FC = () => {
     setSourceFlaggedStatus(null);
     setSourceAddress("");
     setConnectedAccountSource(null);
+    setShowSourceTransactions(false);
     setAlertMessage(null);
   };
 
@@ -231,6 +234,7 @@ const DApp: React.FC = () => {
     setDestinationFlaggedStatus(null);
     setDestinationAddress("");
     setConnectedAccountDestination(null);
+    setShowDestinationTransactions(false);
     setAlertMessage(null);
   };
 
@@ -268,17 +272,8 @@ const DApp: React.FC = () => {
               className="input-text w-full mb-4"
             />
             <div className="flex flex-col space-y-2 w-full">
-              <button onClick={handleConnectWalletSource} className="button">
-                Connect Wallet
-              </button>
               <button onClick={() => handleGenerateStatus(true)} className="button">
                 {loadingSource ? "Loading..." : "Check Status"}
-              </button>
-              <button onClick={() => handleLoadTransactions(true)} className="button-secondary">
-                {showSourceTransactions ? "Reload Transactions" : "Load Transactions"}
-              </button>
-              <button onClick={() => setShowSourceTransactions(!showSourceTransactions)} className="button-secondary">
-                {showSourceTransactions ? "Hide Transactions" : "Show Transactions"}
               </button>
               <button onClick={clearSourceResults} className="button-clear">
                 Clear
@@ -295,17 +290,8 @@ const DApp: React.FC = () => {
               className="input-text w-full mb-4"
             />
             <div className="flex flex-col space-y-2 w-full">
-              <button onClick={handleConnectWalletDestination} className="button">
-                Connect Wallet
-              </button>
               <button onClick={() => handleGenerateStatus(false)} className="button">
                 {loadingDestination ? "Loading..." : "Check Status"}
-              </button>
-              <button onClick={() => handleLoadTransactions(false)} className="button-secondary">
-                {showDestinationTransactions ? "Reload Transactions" : "Load Transactions"}
-              </button>
-              <button onClick={() => setShowDestinationTransactions(!showDestinationTransactions)} className="button-secondary">
-                {showDestinationTransactions ? "Hide Transactions" : "Show Transactions"}
               </button>
               <button onClick={clearDestinationResults} className="button-clear">
                 Clear
@@ -362,14 +348,24 @@ const DApp: React.FC = () => {
                 </p>
               </div>
             )}
-            {showSourceTransactions && sourceTransactions.length > 0 && (
-              <ScoreTxns transactions={sourceTransactions} />
-            )}
+            <div className="transactions-container mt-4">
+              <button onClick={() => handleLoadTransactions(true)} className="button-secondary mb-2">
+                {loadingSource ? "Loading Transactions..." : "Load Transactions"}
+              </button>
+              {showSourceTransactions && (
+                <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
+                  <ScoreTxns transactions={sourceTransactions} />
+                </div>
+              )}
+            </div>
             <div className="insights-container mt-8">
               <h2 className="section-header">Key Insights for Source:</h2>
               <CodeTerminal>
                 {loadingSourceInsights ? "Loading insights..." : sourceInsights || "No significant insights available."}
               </CodeTerminal>
+              <button onClick={() => handleGenerateInsights(true)} className="button-secondary mt-4">
+                {loadingSourceInsights ? "Generating Insights..." : "Generate Insights"}
+              </button>
             </div>
           </div>
           <div className="bg-white shadow-md rounded-lg p-4">
@@ -420,14 +416,24 @@ const DApp: React.FC = () => {
                 </p>
               </div>
             )}
-            {showDestinationTransactions && destinationTransactions.length > 0 && (
-              <ScoreTxns transactions={destinationTransactions} />
-            )}
+            <div className="transactions-container mt-4">
+              <button onClick={() => handleLoadTransactions(false)} className="button-secondary mb-2">
+                {loadingDestination ? "Loading Transactions..." : "Load Transactions"}
+              </button>
+              {showDestinationTransactions && (
+                <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
+                  <ScoreTxns transactions={destinationTransactions} />
+                </div>
+              )}
+            </div>
             <div className="insights-container mt-8">
               <h2 className="section-header">Key Insights for Destination:</h2>
               <CodeTerminal>
                 {loadingDestinationInsights ? "Loading insights..." : destinationInsights || "No significant insights available."}
               </CodeTerminal>
+              <button onClick={() => handleGenerateInsights(false)} className="button-secondary mt-4">
+                {loadingDestinationInsights ? "Generating Insights..." : "Generate Insights"}
+              </button>
             </div>
           </div>
         </div>
