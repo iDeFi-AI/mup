@@ -259,7 +259,7 @@ const DApp: React.FC = () => {
           />
         </div>
         <h4 className="text-2xl font-semibold mb-8">
-          Connect Wallet or Enter Addresses
+          Enter Wallet Address to Check On Status
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
           <div className="flex flex-col items-center p-4 border border-gray-200 rounded-md shadow-sm">
