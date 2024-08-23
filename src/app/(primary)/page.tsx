@@ -344,7 +344,14 @@ const DApp: React.FC = () => {
                   {sourceFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
                 </h2>
                 <p className={`text-base ${sourceFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
-                  {sourceFlaggedStatus.description}
+                  {sourceFlaggedStatus.description
+                    .replace("OFAC sanction list", "OFAC sanction list\n")  // Insert line break after "OFAC sanction list"
+                    .split('\n').map((line, index) => (
+                      <span key={index}>
+                        {line}
+                        <br />
+                      </span>
+                    ))}
                 </p>
               </div>
             )}
@@ -412,7 +419,12 @@ const DApp: React.FC = () => {
                   {destinationFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
                 </h2>
                 <p className={`text-base ${destinationFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
-                  {destinationFlaggedStatus.description}
+                  {destinationFlaggedStatus.description.split('\n').map((line, index) => (
+                    <span key={index}>
+                      {line}
+                      <br />
+                    </span>
+                  ))}
                 </p>
               </div>
             )}
@@ -436,6 +448,10 @@ const DApp: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+        <div className="">
+          <br/>
+            <p>Report bugs to 📧 k3m@idefi.ai</p>
         </div>
       </section>
     </div>

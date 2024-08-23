@@ -37,14 +37,17 @@ interface ScoreTxnsProps {
 const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions }) => {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [updatedTransactions, setUpdatedTransactions] = useState<Transaction[]>([]);
+  const [status, setStatus] = useState<"Fail" | "Pass" | null>(null);
 
   useEffect(() => {
     const fetchSummaryData = async () => {
       if (transactions.length > 0) {
+        const primaryAddress = transactions[0].thirdPartyWallet;
         const addresses = transactions.map((tx) => tx.thirdPartyWallet);
+
         try {
-          // Fetch transaction summary for the primary wallet address in the transactions list
-          const summaryData = await fetchTransactionSummary(transactions[0].thirdPartyWallet);
+          // Fetch transaction summary for the primary wallet address
+          const summaryData = await fetchTransactionSummary(primaryAddress);
           if (summaryData) {
             setSummary(summaryData);
           }
@@ -54,6 +57,15 @@ const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions }) => {
 
           if (checkResults && Array.isArray(checkResults)) {
             console.log("Multiple Addresses Check Results:", checkResults);
+
+            // Determine the status for the primary address
+            const primaryCheckResult = checkResults.find(
+              (result: CheckAddressResult) =>
+                result.address.toLowerCase() === primaryAddress.toLowerCase()
+            );
+            if (primaryCheckResult) {
+              setStatus(primaryCheckResult.status);
+            }
 
             // Update transactions with flagged info from backend
             const newTransactions = transactions.map((tx) => ({
@@ -81,101 +93,51 @@ const ScoreTxns: React.FC<ScoreTxnsProps> = ({ transactions }) => {
     return transaction.flagged ? "Fail" : "Pass";
   };
 
+  const renderSummary = () => {
+    if (status === "Pass" && summary) {
+      return (
+        <div className="summary-card bg-white shadow-md rounded-lg p-6 mb-6">
+          <p className="text-lg text-green-500">This address has passed all checks.</p>
+        </div>
+      );
+    } else if (status === "Fail" && summary) {
+      return (
+        <div className="summary-card bg-white shadow-md rounded-lg p-6 mb-6">
+          <p className="text-lg">
+            Flagged Interactions:{" "}
+            <span className="font-medium text-danger-color">
+              {summary.number_of_interactions_with_flagged_addresses}
+            </span>
+          </p>
+          <p className="text-lg">
+            Risky Transactions:{" "}
+            <span className="font-medium text-warning-color">
+              {summary.number_of_risky_transactions}
+            </span>
+          </p>
+          <p className="text-lg">
+            Total Value:{" "}
+            <span className="font-medium text-success-color">
+              ${summary.total_value.toFixed(2)}
+            </span>
+          </p>
+          <p className="text-lg">
+            Dates Involved:{" "}
+            <span className="font-medium">{summary.all_dates_involved.join(", ")}</span>
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="score-transactions w-full max-w-lg mx-auto my-4">
       <h2 className="text-2xl font-bold mb-4 text-center">
         Transaction History
       </h2>
-      {summary && (
-        <div className="summary-card bg-white shadow-md rounded-lg p-6 mb-6">
-          <div className="summary-item flex items-center mb-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6 text-primary-color mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5.121 17.804A3.375 3.375 0 117.21 6.902a3.375 3.375 0 01-2.09 10.902z"
-              />
-            </svg>
-            <p className="text-lg">
-              Flagged Interactions:{" "}
-              <span className="font-medium text-danger-color">
-                {summary.number_of_interactions_with_flagged_addresses}
-              </span>
-            </p>
-          </div>
-          <div className="summary-item flex items-center mb-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6 text-primary-color mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 10.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM4.75 4.75l7.25 7.25m5.25-1.5V19.25c0 .414-.336.75-.75.75h-9a.75.75 0 01-.75-.75V9.25"
-              />
-            </svg>
-            <p className="text-lg">
-              Risky Transactions:{" "}
-              <span className="font-medium text-warning-color">
-                {summary.number_of_risky_transactions}
-              </span>
-            </p>
-          </div>
-          <div className="summary-item flex items-center mb-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6 text-primary-color mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 1.5a3 3 0 013 3v2a3 3 0 01-3 3H3.75A1.75 1.75 0 002 11.25V20.5a1.5 1.5 0 001.5 1.5h9a3 3 0 003-3v-1.75A3.75 3.75 0 0117.25 14H22m-10-5.25V3.5"
-              />
-            </svg>
-            <p className="text-lg">
-              Total Value:{" "}
-              <span className="font-medium text-success-color">
-                ${summary.total_value.toFixed(2)}
-              </span>
-            </p>
-          </div>
-          <div className="summary-item flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6 text-primary-color mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6v6l4 2m-4-2a8.001 8.001 0 01-6.5 3.25A8 8 0 0112 4.5V12z"
-              />
-            </svg>
-            <p className="text-lg">
-              Dates Involved:{" "}
-              <span className="font-medium">{summary.all_dates_involved.join(", ")}</span>
-            </p>
-          </div>
-        </div>
-      )}
+      {renderSummary()}
       <div className="overflow-x-auto">
         <table className="w-full bg-white rounded-lg shadow-md">
           <thead className="bg-gray-200">
