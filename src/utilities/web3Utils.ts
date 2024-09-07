@@ -11,27 +11,22 @@ declare global {
 let web3: Web3 | null = null;
 
 // Function to connect to the wallet and initialize web3
-export const connectWallet = async (): Promise<string | null> => {
+export const connectWallet = async (providerName: string): Promise<string[] | null> => {
   try {
-    // Check if the window has ethereum providers
     if (typeof window !== 'undefined' && window.ethereum) {
-      // Get all providers
-      const providers = window.ethereum.providers || [window.ethereum];
-
-      // Prompt user to select a provider
-      const provider = await selectProvider(providers);
+      let provider;
+      if (providerName === "MetaMask") {
+        provider = window.ethereum.providers.find((p: any) => p.isMetaMask);
+      } else if (providerName === "CoinbaseWallet") {
+        provider = window.ethereum.providers.find((p: any) => p.isCoinbaseWallet);
+      }
 
       if (provider) {
-        // Request account access
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
-
-        // Initialize web3 with the chosen provider
         web3 = new Web3(provider);
-
-        // Return the connected account
-        return accounts[0];
+        return accounts;
       } else {
-        console.error('No provider selected');
+        console.error('No provider selected or provider not available');
         return null;
       }
     } else {
@@ -44,7 +39,7 @@ export const connectWallet = async (): Promise<string | null> => {
   }
 };
 
-// Function to allow user to select a provider if multiple are available
+// Function to allow the user to select a provider if multiple are available
 const selectProvider = async (providers: any[]): Promise<any | null> => {
   for (const provider of providers) {
     // Identify provider types (MetaMask, Coinbase, etc.)
@@ -56,6 +51,65 @@ const selectProvider = async (providers: any[]): Promise<any | null> => {
   }
   // Return the first provider if no preferred provider is found
   return providers.length > 0 ? providers[0] : null;
+};
+
+// Function to disconnect the wallet
+export const disconnectWallet = async (): Promise<void> => {
+  try {
+    if (typeof window !== 'undefined' && window.ethereum) {
+      const providers = window.ethereum.providers || [window.ethereum];
+      for (const provider of providers) {
+        if (provider.isMetaMask || provider.isCoinbaseWallet) {
+          // Forcing disconnect might require custom logic, like resetting accounts or chains
+          try {
+            await provider.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            });
+          } catch (error) {
+            console.error('Error disconnecting wallet:', error);
+          }
+        }
+      }
+    }
+    web3 = null;
+  } catch (error) {
+    console.error('General error disconnecting wallet:', error);
+  }
+};
+
+// Function to sync wallet data for multiple accounts
+export const syncWalletData = async (accounts: string[]): Promise<void> => {
+  try {
+    for (const account of accounts) {
+      console.log(`Syncing data for account: ${account}`);
+      // Implement actual data synchronization logic here
+      // This could involve fetching balances, transaction history, etc.
+    }
+  } catch (error) {
+    console.error('Error syncing wallet data:', error);
+  }
+};
+
+export const signMessage = async (message: string): Promise<string | null> => {
+  try {
+    if (web3 && typeof window !== 'undefined' && window.ethereum) {
+      const accounts = await web3.eth.getAccounts();
+      if (accounts && accounts.length > 0) {
+        const signature = await web3.eth.personal.sign(message, accounts[0], "");
+        return signature;
+      } else {
+        console.warn('No accounts available for signing');
+        return null;
+      }
+    } else {
+      console.error('Web3 is not initialized or Ethereum is not available');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error signing message:', error);
+    return null;
+  }
 };
 
 // Export the default web3 instance

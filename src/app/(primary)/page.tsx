@@ -1,461 +1,781 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Head from "next/head";
 import Image from "next/image";
-import ScoreTxns from "@/components/layouts/ScoreTxns";
-import CodeTerminal from "@/components/layouts/CodeTerminal";
-import { storeUserId, pushAiInsights } from "@/utilities/firebaseClient";
 import {
-  checkFlaggedAddress,
-  fetchDataAndMetrics,
-  fetchEtherscanData,
-  isValidAddress,
-} from "@/utilities/apiUtils";
-import { connectWallet } from "@/utilities/web3Utils";
-import { generateInsights } from "@/utilities/dataUtils";
+  connectWallet,
+  disconnectWallet,
+  syncWalletData,
+} from "@/utilities/web3Utils";
+import WalletSelectionModal from "@/components/wallets";
+import {
+  AnalysisIcon,
+  ShieldIcon,
+  GraphIcon,
+  KeyIcon,
+  MoneyIcon,
+  BalanceIcon,
+  AdvisorIcon,
+  ContractIcon,
+  SavingsIcon,
+  ChecklistIcon,
+  StarIcon,
+  PlusIcon,
+  CopyIcon,
+  LightningIcon,
+  Alert,
+} from "@/components/icons";
+import SecurityCheck from "./security/security-check";
+import SourceDestination from "./security/source-destination";
+import FinancialRoadmap from "./planning/financial-roadmap";
+import InvestmentSimulator from "./planning/investment-simulator";
+import FinancialHealth from "./metrics/financial-health";
+import CommunicationHub from "./client-support/communication-hub";
+import ShareDashboardModal from "./client-support/share-dashboard";
+import UpgradePlanModal from "./upgrade/UpgradePlanModal";
 
-interface Metric {
-  name: string;
-  value: number;
-  color: string;
-}
+const categories = {
+  ALL: ["SecurityCheck", "SourceDestination", "FinancialRoadmap", "InvestmentSimulator", "FinancialHealth", "CommunicationHub"],
+  PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
+  METRICS: ["FinancialHealth"],
+  SECURITY: ["SecurityCheck", "SourceDestination"],
+  CLIENT_SUPPORT: ["CommunicationHub"],
+};
 
-interface Transaction {
-  id: string;
-  timestamp: string;
-  type: "Sent" | "Received";
-  cryptocurrency: string;
-  usdAmount: number;
-  thirdPartyWallet: string;
-  flagged: boolean;
-  risk: "High" | "Medium" | "Low" | "None";
-}
-
-const DApp: React.FC = () => {
-  const [sourceAddress, setSourceAddress] = useState<string>("");
-  const [destinationAddress, setDestinationAddress] = useState<string>("");
-  const [sourceInsights, setSourceInsights] = useState<string>("");
-  const [destinationInsights, setDestinationInsights] = useState<string>("");
-  const [connectedAccountSource, setConnectedAccountSource] = useState<string | null>(null);
-  const [connectedAccountDestination, setConnectedAccountDestination] = useState<string | null>(null);
-  const [sourceFlaggedStatus, setSourceFlaggedStatus] = useState<{ description: string, status: string } | null>(null);
-  const [destinationFlaggedStatus, setDestinationFlaggedStatus] = useState<{ description: string, status: string } | null>(null);
-  const [sourceTransactions, setSourceTransactions] = useState<Transaction[]>([]);
-  const [destinationTransactions, setDestinationTransactions] = useState<Transaction[]>([]);
-  const [loadingSource, setLoadingSource] = useState(false);
-  const [loadingDestination, setLoadingDestination] = useState(false);
-  const [sourceMetrics, setSourceMetrics] = useState<Metric[]>([]);
-  const [destinationMetrics, setDestinationMetrics] = useState<Metric[]>([]);
-  const [sourceStatus, setSourceStatus] = useState<"Pass" | "Fail" | null>(null);
-  const [destinationStatus, setDestinationStatus] = useState<"Pass" | "Fail" | null>(null);
-  const [loadingSourceStatus, setLoadingSourceStatus] = useState(false);
-  const [loadingDestinationStatus, setLoadingDestinationStatus] = useState(false);
-  const [loadingSourceInsights, setLoadingSourceInsights] = useState(false);
-  const [loadingDestinationInsights, setLoadingDestinationInsights] = useState(false);
-  const [alertMessage, setAlertMessage] = useState<string | null>(null);
-  const [showSourceTransactions, setShowSourceTransactions] = useState(false);
-  const [showDestinationTransactions, setShowDestinationTransactions] = useState(false);
+const DashboardV3: React.FC = () => {
+  // Instead of just string[], now connectedAccounts is an array of objects
+  const [connectedAccounts, setConnectedAccounts] = useState<
+    { account: string; provider: string }[]
+  >([]);
+  const [manualAddress, setManualAddress] = useState<string>("");
+  const [mainAccount, setMainAccount] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [recents, setRecents] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [filteredTools, setFilteredTools] = useState<string[]>(categories.ALL);
+  const [activeCategory, setActiveCategory] = useState<string>("ALL");
+  const [recentsOpen, setRecentsOpen] = useState<boolean>(true);
+  const [favoritesOpen, setFavoritesOpen] = useState<boolean>(true);
+  const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // State for modal visibility
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false); // Upgrade plan modal visibility
+  const openUpgradeModal = () => setIsUpgradeModalOpen(true);
+  const closeUpgradeModal = () => setIsUpgradeModalOpen(false);
 
   useEffect(() => {
-    if (connectedAccountSource) {
-      storeUserId(connectedAccountSource);
+    if (connectedAccounts.length > 0) {
+      syncWalletData(connectedAccounts.map(acc => acc.account));
     }
-  }, [connectedAccountSource]);
+  }, [connectedAccounts]);
 
-  useEffect(() => {
-    if (connectedAccountDestination) {
-      storeUserId(connectedAccountDestination);
-    }
-  }, [connectedAccountDestination]);
-
-  const handleGenerateStatus = async (isSource: boolean) => {
-    const addressToUse = isSource
-      ? connectedAccountSource || sourceAddress
-      : connectedAccountDestination || destinationAddress;
-  
-    if (!isValidAddress(addressToUse)) {
-      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
-      return;
-    }
-  
-    try {
-      if (isSource) {
-        setLoadingSource(true);
-        setLoadingSourceStatus(true);
-      } else {
-        setLoadingDestination(true);
-        setLoadingDestinationStatus(true);
-      }
-  
-      // Fetch flagged status and get details
-      const flaggedResponse = await checkFlaggedAddress(addressToUse);
-      if (flaggedResponse) {
-        const { status, description, metrics, transactions } = flaggedResponse;
-  
-        if (isSource) {
-          setSourceFlaggedStatus({ description, status });
-          setSourceStatus(status);
-          setSourceMetrics(metrics || []);
-          setSourceTransactions(transactions || []);
-        } else {
-          setDestinationFlaggedStatus({ description, status });
-          setDestinationStatus(status);
-          setDestinationMetrics(metrics || []);
-          setDestinationTransactions(transactions || []);
-        }
-
-        // Store user ID (address) for analytics or logging purposes
-        storeUserId(addressToUse);
-  
-        setAlertMessage(null); // Clear any alert on success
-      } else {
-        throw new Error("No data received from checkFlaggedAddress");
-      }
-    } catch (error) {
-      console.error("Error during status generation:", error);
-      setAlertMessage("Failed to generate status. Please check the address and try again.");
-    } finally {
-      if (isSource) {
-        setLoadingSource(false);
-        setLoadingSourceStatus(false);
-      } else {
-        setLoadingDestination(false);
-        setLoadingDestinationStatus(false);
-      }
-    }
+  const handleConnectWallet = () => {
+    setShowWalletModal(true);
   };
 
-  const handleGenerateInsights = async (isSource: boolean) => {
-    const addressToUse = isSource ? sourceAddress : destinationAddress;
-    const transactionsToUse = isSource ? sourceTransactions : destinationTransactions;
-    const statusToUse = isSource ? sourceStatus : destinationStatus;
-
-    if (!isValidAddress(addressToUse)) {
-      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
-      return;
-    }
-
-    if (isSource) {
-      setLoadingSourceInsights(true);
+  const handleWalletSelect = async (provider: string) => {
+    const accounts = await connectWallet(provider);
+    if (accounts) {
+      const uniqueAccounts = Array.from(
+        new Set([
+          ...connectedAccounts,
+          ...accounts.map((account: string) => ({ account, provider })),
+        ])
+      );
+      setConnectedAccounts(uniqueAccounts);
+      setMainAccount(uniqueAccounts[0].account); // Set the first account as the main account
+      setShowWalletModal(false);
     } else {
-      setLoadingDestinationInsights(true);
-    }
-
-    try {
-      const insights = await generateInsights(addressToUse, transactionsToUse, statusToUse ?? "None");
-      const insightsText = insights || "No significant insights available.";
-
-      if (isSource) {
-        setSourceInsights(insightsText);
-      } else {
-        setDestinationInsights(insightsText);
-      }
-
-      // Push AI Insights to Firebase
-      await pushAiInsights({
-        userAddress: addressToUse,
-        insights: insightsText,
-        timestamp: Date.now(),
-      });
-
-      setAlertMessage(null); // Clear any alert on success
-    } catch (error) {
-      console.error("Error generating insights:", error);
-      setAlertMessage("Failed to generate insights. Please try again.");
-    } finally {
-      if (isSource) {
-        setLoadingSourceInsights(false);
-      } else {
-        setLoadingDestinationInsights(false);
-      }
+      alert("Failed to connect wallet. Please try again.");
     }
   };
 
-  const handleLoadTransactions = async (isSource: boolean) => {
-    const addressToUse = isSource
-      ? connectedAccountSource || sourceAddress
-      : connectedAccountDestination || destinationAddress;
-
-    if (!isValidAddress(addressToUse)) {
-      setAlertMessage(`Invalid ${isSource ? "Source" : "Destination"} Address. Please enter a valid address.`);
-      return;
+  const handleDisconnectWallet = (account: string) => {
+    const updatedAccounts = connectedAccounts.filter(acc => acc.account !== account);
+    setConnectedAccounts(updatedAccounts);
+    if (mainAccount === account) {
+      setMainAccount(updatedAccounts.length > 0 ? updatedAccounts[0].account : null);
     }
+    disconnectWallet();
+  };
 
-    if (isSource) {
-      setLoadingSource(true);
+  const copyToClipboard = (account: string) => {
+    navigator.clipboard.writeText(account);
+    alert("Address copied to clipboard!");
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
+  const shortenAddress = (address: string) => {
+    const isMobile = window.innerWidth < 768;
+    return isMobile
+      ? address.length > 10
+        ? `${address.slice(0, 6)}...${address.slice(-4)}`
+        : address
+      : address.length > 10
+      ? `${address.slice(0, 42)}...${address.slice(-6)}`
+      : address;
+  };
+
+  const handleManualInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setManualAddress(e.target.value);
+  };
+
+  const addManualAddress = () => {
+    if (manualAddress && !connectedAccounts.some(acc => acc.account === manualAddress)) {
+      setConnectedAccounts(prevAccounts => [...prevAccounts, { account: manualAddress, provider: "Manual" }]);
+      setMainAccount(manualAddress);
+      setManualAddress("");
     } else {
-      setLoadingDestination(true);
-    }
-
-    try {
-      // Fetch and set transactions
-      const transactions = await fetchEtherscanData(addressToUse);
-      if (transactions) {
-        if (isSource) {
-          setSourceTransactions(transactions);
-          setShowSourceTransactions(true); // Automatically show transactions after loading
-        } else {
-          setDestinationTransactions(transactions);
-          setShowDestinationTransactions(true); // Automatically show transactions after loading
-        }
-      }
-
-      setAlertMessage(null); // Clear any alert on success
-    } catch (error) {
-      console.error("Error during transactions loading:", error);
-      setAlertMessage("Failed to load transactions. Please try again.");
-    } finally {
-      if (isSource) {
-        setLoadingSource(false);
-      } else {
-        setLoadingDestination(false);
-      }
+      alert("This address is already added or invalid.");
     }
   };
 
-  const clearSourceResults = () => {
-    setSourceMetrics([]);
-    setSourceTransactions([]);
-    setSourceStatus(null);
-    setSourceInsights("");
-    setSourceFlaggedStatus(null);
-    setSourceAddress("");
-    setConnectedAccountSource(null);
-    setShowSourceTransactions(false);
-    setAlertMessage(null);
+  const handleFilterClick = (filter: keyof typeof categories) => {
+    setFilteredTools(categories[filter]);
+    setActiveCategory(filter);
+    setActiveTool(null);
   };
 
-  const clearDestinationResults = () => {
-    setDestinationMetrics([]);
-    setDestinationTransactions([]);
-    setDestinationStatus(null);
-    setDestinationInsights("");
-    setDestinationFlaggedStatus(null);
-    setDestinationAddress("");
-    setConnectedAccountDestination(null);
-    setShowDestinationTransactions(false);
-    setAlertMessage(null);
+  const handleToolClick = (tool: string) => {
+    setActiveTool(tool);
+    setRecents(prev => [tool, ...prev.filter(item => item !== tool)].slice(0, 5));
+    setIsShareModalOpen(false);
+  };
+
+  const toggleFavorite = (tool: string) => {
+    setFavorites(prev =>
+      prev.includes(tool) ? prev.filter(item => item !== tool) : [...prev, tool]
+    );
+  };
+
+  const handleCloseModal = () => {
+    setIsShareModalOpen(false);
+  };
+  
+
+  const renderActiveTool = () => {
+    switch (activeTool) {
+      case "SecurityCheck":
+        return <SecurityCheck />;
+      case "SourceDestination":
+        return <SourceDestination />;
+      case "FinancialRoadmap":
+        return <FinancialRoadmap />;
+      case "InvestmentSimulator":
+        return <InvestmentSimulator />;
+      case "FinancialHealth":
+        return <FinancialHealth />;
+      case "CommunicationHub":
+        return <CommunicationHub />;
+      default:
+        return renderToolGrid();
+    }
+  };
+
+  const renderToolGrid = () => (
+    <div className="grid-container">
+      {categories[activeCategory as keyof typeof categories].map((tool) => (
+        <div
+          key={tool}
+          className="grid-item"
+          onClick={() => handleToolClick(tool)}
+        >
+          <div className="icon-placeholder">
+            {tool === "SecurityCheck" ? <ShieldIcon /> : tool === "FinancialHealth" ? <BalanceIcon /> : <ChecklistIcon />}
+          </div>
+          <p>{tool.replace(/([A-Z])/g, " $1")}</p> {/* Converts camelCase to readable format */}
+          <span
+            className={`star-icon ${favorites.includes(tool) ? "favorited" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(tool);
+            }}
+          >
+            {favorites.includes(tool) ? "★" : "☆"}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const getWalletLogo = (provider: string) => {
+    if (provider === "MetaMask") {
+      return "/metamask-logo.png";
+    } else if (provider === "CoinbaseWallet") {
+      return "/coinbase-logo.png";
+    } else {
+      return "/logo.png";
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background-color flex flex-col items-center text-center p-6">
-      <Head>
-        <title>MUP</title>
-      </Head>
-      <section className="flex flex-col items-center justify-center py-8 px-4 w-full max-w-6xl bg-white shadow-lg rounded-lg">
-        {alertMessage && (
-          <div className="alert">
-            {alertMessage}
-          </div>
-        )}
-        <div className="mb-6">
-          <Image
-            src="/brandlogo.png"
-            alt="brand logo"
-            width={150}
-            height={150}
-            className="mx-auto"
+    <div className="dashboard-container">
+      {showWalletModal && (
+        <WalletSelectionModal
+          onSelect={handleWalletSelect}
+          onClose={() => setShowWalletModal(false)}
+        />
+      )}
+
+      <div className="sidebar">
+        <div className="logo">
+          <Image 
+            src="/brandlogo.png" 
+            alt="iDEFi.AI Logo" 
+            width={150} 
+            height={50} 
+            className="logo-image"
           />
         </div>
-        <h4 className="text-2xl font-semibold mb-8">
-          Enter Wallet Address to Check On Status
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
-          <div className="flex flex-col items-center p-4 border border-gray-200 rounded-md shadow-sm">
-            <h5 className="text-xl font-medium mb-4">Source</h5>
-            <input
-              type="text"
-              placeholder="Enter Source Address"
-              value={sourceAddress}
-              onChange={(e) => setSourceAddress(e.target.value)}
-              className="input-text w-full mb-4"
-            />
-            <div className="flex flex-col space-y-2 w-full">
-              <button onClick={() => handleGenerateStatus(true)} className="button">
-                {loadingSource ? "Loading..." : "Check Status"}
-              </button>
-              <button onClick={clearSourceResults} className="button-clear">
-                Clear
-              </button>
-            </div>
-          </div>
-          <div className="flex flex-col items-center p-4 border border-gray-200 rounded-md shadow-sm">
-            <h5 className="text-xl font-medium mb-4">Destination</h5>
-            <input
-              type="text"
-              placeholder="Enter Destination Address (Optional)"
-              value={destinationAddress}
-              onChange={(e) => setDestinationAddress(e.target.value)}
-              className="input-text w-full mb-4"
-            />
-            <div className="flex flex-col space-y-2 w-full">
-              <button onClick={() => handleGenerateStatus(false)} className="button">
-                {loadingDestination ? "Loading..." : "Check Status"}
-              </button>
-              <button onClick={clearDestinationResults} className="button-clear">
-                Clear
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
-          <div className="bg-white shadow-md rounded-lg p-4">
-            <h2 className="section-header">Source Address Results</h2>
-            {loadingSourceStatus ? (
-              <p className="text-lg mt-4 font-medium">Loading status...</p>
-            ) : (
-              sourceStatus && (
-                <p className="text-lg mt-4 font-medium">
-                  Status:{" "}
-                  <span className={sourceStatus === "Pass" ? "pass-indicator" : "fail-indicator"}>
-                    {sourceStatus}
-                  </span>
-                </p>
-              )
+        <nav className="nav-menu">
+        <ul>
+          <li className={activeTool === null ? "active" : ""} onClick={() => setActiveTool(null)}>
+            <AdvisorIcon /> Agent Tools
+          </li>
+
+          <li onClick={() => setRecentsOpen(!recentsOpen)}>
+            <GraphIcon /> Recents {recentsOpen ? "▼" : "►"}
+          </li>
+          {recentsOpen && recents.length > 0 && (
+              <ul className="sub-menu">
+                {recents.map((tool) => (
+                  <li key={tool} onClick={() => handleToolClick(tool)}>
+                    {tool.replace(/([A-Z])/g, " $1")}
+                  </li>
+                ))}
+              </ul>
             )}
-            {sourceMetrics.length > 0 &&
-              sourceMetrics.map((metric, index) => (
-                <div key={index} className={`w-full p-2 text-lg font-medium ${metric.color}`}>
-                  {metric.name}: {metric.value}
-                </div>
-              ))}
-            {sourceFlaggedStatus && (
-              <div
-                className={`flagged-status my-8 p-4 ${
-                  sourceFlaggedStatus.status === "Fail" ? "bg-red-100 border-red-300" : "bg-green-100 border-green-300"
-                } rounded-md shadow-sm`}
-              >
-                <h2
-                  className={`section-header ${
-                    sourceFlaggedStatus.status === "Fail" ? "text-red-700" : "text-green-700"
-                  } flex items-center`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                    className="w-6 h-6 mr-2"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.054 0 1.918-.816 1.995-1.851L21 18V6c0-1.054-.816-1.918-1.851-1.995L19 4H5c-1.054 0-1.918.816-1.995 1.851L3 6v12c0 1.054.816 1.918 1.851 1.995L5 20zm13 0H6" />
-                  </svg>
-                  {sourceFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
-                </h2>
-                <p className={`text-base ${sourceFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
-                  {sourceFlaggedStatus.description
-                    .replace("OFAC sanction list", "OFAC sanction list\n")  // Insert line break after "OFAC sanction list"
-                    .split('\n').map((line, index) => (
-                      <span key={index}>
-                        {line}
-                        <br />
-                      </span>
-                    ))}
-                </p>
-              </div>
+
+          <li onClick={() => setFavoritesOpen(!favoritesOpen)}>
+            <StarIcon /> Favorites {favoritesOpen ? "▼" : "►"}
+          </li>
+          {favoritesOpen && favorites.length > 0 && (
+              <ul className="sub-menu">
+                {favorites.map((tool) => (
+                  <li key={tool} onClick={() => handleToolClick(tool)}>
+                    {tool.replace(/([A-Z])/g, " $1")}
+                  </li>
+                ))}
+              </ul>
             )}
-            <div className="transactions-container mt-4">
-              <button onClick={() => handleLoadTransactions(true)} className="button-secondary mb-2">
-                {loadingSource ? "Loading Transactions..." : "Load Transactions"}
-              </button>
-              {showSourceTransactions && (
-                <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
-                  <ScoreTxns transactions={sourceTransactions} />
-                </div>
-              )}
+
+          {/* Share with Client button triggers the modal */}
+          <li onClick={() => setIsShareModalOpen(true)}>
+            <ContractIcon /> Share with Client
+          </li>
+
+           {/* Upgrade Plan button triggers the upgrade plan modal */}
+            <li onClick={openUpgradeModal}>
+              <LightningIcon /> Upgrade Plan
+            </li>
+        </ul>
+        <p className="beta-notice">
+            <Alert /> This is a Beta version of our Demo. Please be aware that some of the features and access to certain tools will be limited.
+          </p>
+      </nav>
+
+      {/* Other dashboard content */}
+
+      {/* Render the modal when isShareModalOpen is true */}
+      {isShareModalOpen && (
+        <ShareDashboardModal onClose={handleCloseModal} />
+      )}
+
+      {/* Upgrade Plan Modal */}
+      {isUpgradeModalOpen && (
+        <UpgradePlanModal onClose={closeUpgradeModal} />
+      )}
+
+      </div>
+      
+      <div className="main-content bg-background-color">
+        <div className="header">
+          <div className="wallet-management">
+            <div className="wallet-summary" onClick={toggleDropdown}>
+              <span>{mainAccount ? shortenAddress(mainAccount) : "No Wallet Connected"}</span>
+              <span>{showDropdown ? "▲" : "▼"}</span>
             </div>
-            <div className="insights-container mt-8">
-              <h2 className="section-header">Key Insights for Source:</h2>
-              <CodeTerminal>
-                {loadingSourceInsights ? "Loading insights..." : sourceInsights || "No significant insights available."}
-              </CodeTerminal>
-              <button onClick={() => handleGenerateInsights(true)} className="button-secondary mt-4">
-                {loadingSourceInsights ? "Generating Insights..." : "Generate Insights"}
-              </button>
-            </div>
-          </div>
-          <div className="bg-white shadow-md rounded-lg p-4">
-            <h2 className="section-header">Destination Address Results</h2>
-            {loadingDestinationStatus ? (
-              <p className="text-lg mt-4 font-medium">Loading status...</p>
-            ) : (
-              destinationStatus && (
-                <p className="text-lg mt-4 font-medium">
-                  Status:{" "}
-                  <span className={destinationStatus === "Pass" ? "pass-indicator" : "fail-indicator"}>
-                    {destinationStatus}
-                  </span>
-                </p>
-              )
-            )}
-            {destinationMetrics.length > 0 &&
-              destinationMetrics.map((metric, index) => (
-                <div key={index} className={`w-full p-2 text-lg font-medium ${metric.color}`}>
-                  {metric.name}: {metric.value}
-                </div>
-              ))}
-            {destinationFlaggedStatus && (
-              <div
-                className={`flagged-status my-8 p-4 ${
-                  destinationFlaggedStatus.status === "Fail" ? "bg-red-100 border-red-300" : "bg-green-100 border-green-300"
-                } rounded-md shadow-sm`}
-              >
-                <h2
-                  className={`section-header ${
-                    destinationFlaggedStatus.status === "Fail" ? "text-red-700" : "text-green-700"
-                  } flex items-center`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    stroke="currentColor"
-                    className="w-6 h-6 mr-2"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.054 0 1.918-.816 1.995-1.851L21 18V6c0-1.054-.816-1.918-1.851-1.995L19 4H5c-1.054 0-1.918.816-1.995 1.851L3 6v12c0 1.054.816 1.918 1.851 1.995L5 20zm13 0H6" />
-                  </svg>
-                  {destinationFlaggedStatus.status === "Fail" ? "Malicious Activity Detected" : "No Malicious Activity"}
-                </h2>
-                <p className={`text-base ${destinationFlaggedStatus.status === "Fail" ? "text-red-600" : "text-green-600"}`}>
-                  {destinationFlaggedStatus.description.split('\n').map((line, index) => (
-                    <span key={index}>
-                      {line}
-                      <br />
+            {showDropdown && (
+              <div className="wallet-dropdown">
+                {connectedAccounts.map(({ account, provider }, index) => (
+                  <div key={index} className="wallet-info" onClick={() => setMainAccount(account)}>
+                    <Image
+                      src={getWalletLogo(provider)}
+                      alt="Wallet Logo"
+                      width={24}
+                      height={24}
+                      className="wallet-logo"
+                      priority
+                      quality={100}
+                      layout="fixed"
+                    />
+                    <span className="wallet-address" title={account}>
+                      {shortenAddress(account)}
                     </span>
-                  ))}
-                </p>
+                    <button onClick={() => copyToClipboard(account)} className="copy-button">
+                      <CopyIcon />
+                    </button>
+                    <button onClick={() => handleDisconnectWallet(account)} className="disconnect-button">
+                      Disconnect
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
-            <div className="transactions-container mt-4">
-              <button onClick={() => handleLoadTransactions(false)} className="button-secondary mb-2">
-                {loadingDestination ? "Loading Transactions..." : "Load Transactions"}
-              </button>
-              {showDestinationTransactions && (
-                <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
-                  <ScoreTxns transactions={destinationTransactions} />
-                </div>
-              )}
-            </div>
-            <div className="insights-container mt-8">
-              <h2 className="section-header">Key Insights for Destination:</h2>
-              <CodeTerminal>
-                {loadingDestinationInsights ? "Loading insights..." : destinationInsights || "No significant insights available."}
-              </CodeTerminal>
-              <button onClick={() => handleGenerateInsights(false)} className="button-secondary mt-4">
-                {loadingDestinationInsights ? "Generating Insights..." : "Generate Insights"}
-              </button>
-            </div>
+            <button onClick={handleConnectWallet} className="connect-button">
+              <KeyIcon style={{ marginRight: '8px' }} />
+              Connect and Sync Your Wallets
+            </button>
+          </div>
+          <div className="wallet-input-container">
+            <input
+              type="text"
+              className="wallet-input"
+              value={manualAddress}
+              placeholder="Enter Wallet Address . . ."
+              onChange={handleManualInput}
+            />
+            <button onClick={addManualAddress} className="add-button">
+              <PlusIcon style={{ marginRight: '8px' }} />
+              Add
+            </button>
+          </div>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-button ${activeCategory === 'ALL' ? 'active' : ''}`} 
+              onClick={() => handleFilterClick('ALL')}
+            >
+              ALL
+            </button>
+            <button 
+              className={`filter-button ${activeCategory === 'PLANNING' ? 'active' : ''}`} 
+              onClick={() => handleFilterClick('PLANNING')}
+            >
+              Planning
+            </button>
+            <button 
+              className={`filter-button ${activeCategory === 'METRICS' ? 'active' : ''}`} 
+              onClick={() => handleFilterClick('METRICS')}
+            >
+              Metrics
+            </button>
+            <button 
+              className={`filter-button ${activeCategory === 'SECURITY' ? 'active' : ''}`} 
+              onClick={() => handleFilterClick('SECURITY')}
+            >
+              Security
+            </button>
+            <button 
+              className={`filter-button ${activeCategory === 'CLIENT_SUPPORT' ? 'active' : ''}`} 
+              onClick={() => handleFilterClick('CLIENT_SUPPORT')}
+            >
+              Client Support
+            </button>
           </div>
         </div>
-        <div className="">
-          <br/>
-            <p>Report bugs to 📧 k3m@idefi.ai</p>
-        </div>
-      </section>
+
+        {renderActiveTool()}
+      </div>
+
+      <style jsx>{`
+      .dashboard-container {
+        display: flex;
+        height: 100vh;
+        background-color: #f8f9fa;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        width: 240px;
+        background-color: white;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        border-right: 1px solid #E0E0E0;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+      }
+
+      .logo {
+        margin-bottom: 30px;
+      }
+
+      .logo-image {
+        max-width: 150px;
+        height: auto;
+      }
+
+      .nav-menu ul {
+        list-style: none;
+        padding: 0;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .nav-menu li {
+        padding: 15px 20px;
+        font-size: 16px;
+        color: #757575;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 8px;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .nav-menu li.active,
+      .nav-menu li:hover {
+        color: #FF7E2F;
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+
+      .sub-menu {
+        padding-left: 20px;
+        margin-top: 5px;
+      }
+
+      .sub-menu li {
+        padding: 10px;
+        font-size: 14px;
+        color: #555;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      .sub-menu li:hover {
+        color: #FF7E2F;
+        background-color: #f2f2f2;
+      }
+
+      .upgrade-section {
+        margin-top: auto;
+        text-align: center;
+      }
+
+      .upgrade-button {
+        background-color: #FF7E2F;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .main-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        transition: all 0.3s ease;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+      }
+
+      .wallet-management {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        max-width: 600px;
+      }
+
+      .wallet-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background-color: #f2f2f2;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      .wallet-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .wallet-address {
+        font-size: 14px;
+        color: #333;
+      }
+
+      .copy-button,
+      .disconnect-button {
+        background-color: #FF7E2F;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .wallet-dropdown {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: white;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .wallet-dropdown div:hover {
+          background-color: #f2f2f2;
+          transition: background-color 0.3s;
+          cursor: pointer;
+        }
+
+      .connect-button {
+        background-color: #FF7E2F;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+      }
+
+      .wallet-input-container {
+        display: flex;
+        gap: 10px;
+        flex: 1;
+        margin-top: 10px;
+        width: 100%;
+      }
+
+      .wallet-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #E0E0E0;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      .add-button {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+      }
+
+      .filter-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .filter-button {
+        background-color: #F1F0EB;
+        color: #333;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s, color 0.3s;
+        flex: 1;
+      }
+
+      .filter-button.active,
+      .filter-button:hover {
+        background-color: #FF7E2F;
+        color: white;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        width: 100%;
+      }
+
+      .grid-item {
+        background-color: white;
+        border: 1px solid #E0E0E0;
+        border-radius: 12px;
+        height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+      }
+
+      .grid-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .icon-placeholder {
+        margin-bottom: 10px;
+      }
+
+      .grid-item p {
+        font-size: 14px;
+        color: #757575;
+      }
+
+      .star-icon {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        font-size: 20px;
+        color: #FFD700;
+      }
+
+      .star-icon.favorited {
+        color: #FF7E2F;
+      }
+
+       .beta-notice {
+          margin-top: 20px;
+          padding: 10px;
+          background-color: #fff3cd;
+          color: #856404;
+          border: 1px solid #ffeeba;
+          border-radius: 8px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+      @media (max-width: 1200px) {
+        .grid-container {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .grid-container {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .sidebar {
+          width: 200px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .grid-container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          width: 100%;
+          padding: 10px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-direction: row;
+          z-index: 1000;
+          border-right: none;
+          border-bottom: 1px solid #E0E0E0;
+          background-color: white;
+          transition: all 0.3s ease;
+        }
+
+        .nav-menu ul {
+          flex-direction: row;
+          justify-content: space-around;
+          padding: 0 10px;
+          width: 100%;
+        }
+
+        .nav-menu li {
+          flex: 1;
+          text-align: center;
+          padding: 10px 0;
+          font-size: 14px;
+        }
+
+        .main-content {
+          padding: 80px 10px 20px 10px;
+        }
+
+        .wallet-management {
+          max-width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .sidebar {
+          flex-direction: column;
+          height: auto;
+        }
+
+        .wallet-management {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .wallet-summary {
+          width: 100%;
+        }
+
+        .connect-button {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .sidebar {
+          padding: 5px;
+          height: 50px;
+        }
+
+        .wallet-input-container {
+          flex-direction: column;
+          gap: 5px;
+        }
+      }
+    `}</style>
     </div>
   );
 };
 
-export default DApp;
+export default DashboardV3;

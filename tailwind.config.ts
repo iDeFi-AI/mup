@@ -11,7 +11,7 @@ const config: Config = {
       colors: {
         neorange: '#fdb777',
         neohover:'#fd9346',
-        neodark: '#ff6200'
+        neodark: '#FFA756'
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

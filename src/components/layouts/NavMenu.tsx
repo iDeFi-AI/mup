@@ -6,19 +6,7 @@ import Link from 'next/link';
 
 import LogoImage from '@/assets/imgs/logo.png';
 
-import HeaderNavLink from '../links/HeaderNavLink';
-
-const menuItems = [
-  { label: `API`, url: `api`},
-  { label: `POC`, url: `ipoc` },
-  { label: `iDAC`, url: `idac` },
-  { label: `B1H0`, url: `b1h0` },
-  { label: `TEAM`, url: `team` },
-  { label: `QUANTUM`, url: `quantum`},
-  {label: 'Launch App', url: 'dapp'},
-];
-
-const NavMenu: React.FC<NavMenuProps> = ({}) => {
+const NavMenu: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -26,7 +14,7 @@ const NavMenu: React.FC<NavMenuProps> = ({}) => {
       if (window.scrollY > 10) {
         setIsScrolled(true);
       } else {
-        setIsScrolled(true);
+        setIsScrolled(false);
       }
     };
 
@@ -38,72 +26,47 @@ const NavMenu: React.FC<NavMenuProps> = ({}) => {
   }, []);
 
   return (
-    <Disclosure as='nav' className={`bg-white shadow ${isScrolled ? 'sticky-header' : ''}`}>
+    <Disclosure as="nav" className={`bg-white shadow ${isScrolled ? 'sticky-header' : ''}`}>
       {({ open }) => (
         <>
-          <div className='mx-auto max-w-7xl px-2 sm:px-4 lg:px-8'>
-            <div className='flex h-16 justify-between'>
-              <div className='flex px-2 lg:px-0'>
-                <div className='flex flex-shrink-0 items-center'>
-                  <Link href="/home">
-                    <NextImage
-                      className='h-8 w-auto'
-                      src={LogoImage}
-                      alt=''
-                      width={210}
-                      height={125}
-                    />
-                  </Link>
-                </div>
+          <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+            <div className="flex h-16 justify-between items-center">
+              <div className="flex items-center">
+                <Link href="/">
+                  <NextImage
+                    className="h-8 w-auto"
+                    src={LogoImage}
+                    alt="iDeFi.AI Logo"
+                    width={150}
+                    height={50}
+                  />
+                </Link>
               </div>
-              <div className='flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end'></div>
-              <div className='flex px-2 lg:px-0'>
-                <div className='hidden lg:ml-6 lg:flex lg:space-x-8'>
-                  {menuItems.map((item) => (
-                    <HeaderNavLink href={item.url} key={item.url}>
-                      {item.label === 'Launch App' ? (
-                        <button className='text-white bg-neorange px-3 py-2 rounded-full'>
-                          {item.label}
-                        </button>
-                      ) : (
-                        item.label
-                      )}
-                    </HeaderNavLink>
-                  ))}
-                </div>
+              <div className="hidden lg:flex lg:space-x-8">
+                <Link href="/" className="text-gray-900 hover:text-neorange">Agents</Link>
+                <Link href="/" className="text-gray-900 hover:text-neorange">Recents</Link>
+                <Link href="/" className="text-gray-900 hover:text-neorange">Favorites</Link>
+                <Link href="/" className="text-gray-900 hover:text-neorange">Share with Client</Link>
+                <Link href="/" className="text-gray-900 hover:text-neorange">Savings</Link>
+                <Link href="/" className="text-gray-900 hover:text-neorange">Upgrade Plan</Link>
               </div>
-              <div className='flex items-center lg:hidden'>
-                <Disclosure.Button className='relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-neorange'>
-                  <span className='absolute -inset-0.5' />
-                  <span className='sr-only'>Open main menu</span>
-                  {open ? (
-                    <XMarkIcon className='block h-6 w-6' aria-hidden='true' />
-                  ) : (
-                    <Bars3Icon className='block h-6 w-6' aria-hidden='true' />
-                  )}
+              <div className="lg:hidden">
+                <Disclosure.Button className="p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-neorange">
+                  <span className="sr-only">Open main menu</span>
+                  {open ? <XMarkIcon className="block h-6 w-6" aria-hidden="true" /> : <Bars3Icon className="block h-6 w-6" aria-hidden="true" />}
                 </Disclosure.Button>
               </div>
-              <div className='flex ml-4 lg:flex lg:items-center'></div>
             </div>
           </div>
 
-          <Disclosure.Panel className='lg:hidden'>
-            <div className='flex flex-col items-center space-y-2 py-3'>
-              {menuItems.map((item) => {
-                return (
-                  <Link href={item.url} key={item.label}>
-                  <div className='block py-2 text-base font-medium text-gray-600 hover:text-neorange'>
-                    {item.label === 'Launch App' ? (
-                      <button className='text-white bg-neorange px-3 py-2 rounded-full'>
-                        {item.label}
-                      </button>
-                    ) : (
-                      item.label
-                    )}
-                  </div>
-                </Link>
-                );
-              })}
+          <Disclosure.Panel className="lg:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Agents</Link>
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Recents</Link>
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Favorites</Link>
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Share with Client</Link>
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Savings</Link>
+              <Link href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:text-neorange">Upgrade Plan</Link>
             </div>
           </Disclosure.Panel>
         </>
@@ -111,7 +74,5 @@ const NavMenu: React.FC<NavMenuProps> = ({}) => {
     </Disclosure>
   );
 };
-
-interface NavMenuProps {}
 
 export default NavMenu;

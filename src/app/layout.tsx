@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import * as React from 'react'
 import { Analytics } from "@vercel/analytics/react"
 import '@/styles/globals.css'
+import Link from 'next/link'
 
 import { siteConfig } from '@/constants/config'
 
@@ -12,7 +13,6 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   robots: { index: true, follow: true },
-  // !STARTERCONF this is the default favicon, you can generate your own from https://realfavicongenerator.net/
   icons: {
     icon: '/favicon/favicon.ico',
     shortcut: '/favicon/favicon-16x16.png',
@@ -23,12 +23,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html>
-      <body>
-        <div className='py-8'>
-        {children}
-        <Analytics />
-        </div>
+    <html lang="en" className="bg-background-color min-h-full">
+      <body className="bg-background-color min-h-screen flex flex-col">
+        <header className="w-full bg-white shadow-md py-4 flex justify-between items-center px-4">
+          <div className="text-xl font-semibold">
+            <img src="/brandlogo.png" alt="iDeFi.AI" className="h-8 inline-block" />
+            <span className="ml-2">(beta)</span>
+          </div>
+        </header>
+        <main className="flex-grow py-8">
+          {children}
+          <Analytics />
+        </main>
+        <footer className="w-full space-between bg-white shadow-md py-4 text-center">
+          <p className="text-sm text-gray-500">
+            © 2024 iDeFi.AI - All Rights Reserved
+          </p>
+          <p className="text-sm text-gray-500">
+          <Link href="/terms" className="text-gray-900 hover:text-neorange">Beta Terms</Link>
+          </p>
+        </footer>
       </body>
     </html>
   )
