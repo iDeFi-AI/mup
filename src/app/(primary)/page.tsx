@@ -24,6 +24,7 @@ import {
   CopyIcon,
   LightningIcon,
   Alert,
+  Robot, // Assuming RobotIcon is for "Create Agent"
 } from "@/components/icons";
 import SecurityCheck from "./security/security-check";
 import SourceDestination from "./security/source-destination";
@@ -33,6 +34,7 @@ import FinancialHealth from "./metrics/financial-health";
 import CommunicationHub from "./client-support/communication-hub";
 import ShareDashboardModal from "./client-support/share-dashboard";
 import UpgradePlanModal from "./upgrade/UpgradePlanModal";
+import CreateAgent from "./agents/create-agent"; // Import the Create Agent component
 
 const categories = {
   ALL: ["SecurityCheck", "SourceDestination", "FinancialRoadmap", "InvestmentSimulator", "FinancialHealth", "CommunicationHub"],
@@ -43,10 +45,7 @@ const categories = {
 };
 
 const DashboardV3: React.FC = () => {
-  // Instead of just string[], now connectedAccounts is an array of objects
-  const [connectedAccounts, setConnectedAccounts] = useState<
-    { account: string; provider: string }[]
-  >([]);
+  const [connectedAccounts, setConnectedAccounts] = useState<{ account: string; provider: string }[]>([]);
   const [manualAddress, setManualAddress] = useState<string>("");
   const [mainAccount, setMainAccount] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
@@ -58,10 +57,6 @@ const DashboardV3: React.FC = () => {
   const [favoritesOpen, setFavoritesOpen] = useState<boolean>(true);
   const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // State for modal visibility
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false); // Upgrade plan modal visibility
-  const openUpgradeModal = () => setIsUpgradeModalOpen(true);
-  const closeUpgradeModal = () => setIsUpgradeModalOpen(false);
 
   useEffect(() => {
     if (connectedAccounts.length > 0) {
@@ -142,7 +137,6 @@ const DashboardV3: React.FC = () => {
   const handleToolClick = (tool: string) => {
     setActiveTool(tool);
     setRecents(prev => [tool, ...prev.filter(item => item !== tool)].slice(0, 5));
-    setIsShareModalOpen(false);
   };
 
   const toggleFavorite = (tool: string) => {
@@ -152,9 +146,7 @@ const DashboardV3: React.FC = () => {
   };
 
   const handleCloseModal = () => {
-    setIsShareModalOpen(false);
   };
-  
 
   const renderActiveTool = () => {
     switch (activeTool) {
@@ -170,6 +162,12 @@ const DashboardV3: React.FC = () => {
         return <FinancialHealth />;
       case "CommunicationHub":
         return <CommunicationHub />;
+      case "CreateAgent":  // New case for Create Agent tool
+        return <CreateAgent />;
+      case "UpgradePlanModal":  // New case for Create Agent tool
+        return <UpgradePlanModal />;
+      case "ShareDashboardModal":  // New case for Create Agent tool
+        return <ShareDashboardModal />;
       default:
         return renderToolGrid();
     }
@@ -262,33 +260,25 @@ const DashboardV3: React.FC = () => {
               </ul>
             )}
 
+          {/* Create Agent button with RobotIcon */}
+          <li onClick={() => handleToolClick("CreateAgent")}> 
+            <Robot /> Create an Agent
+          </li>
+
           {/* Share with Client button triggers the modal */}
-          <li onClick={() => setIsShareModalOpen(true)}>
+          <li onClick={() => handleToolClick("ShareDashboardModal")}> 
             <ContractIcon /> Share with Client
           </li>
 
            {/* Upgrade Plan button triggers the upgrade plan modal */}
-            <li onClick={openUpgradeModal}>
-              <LightningIcon /> Upgrade Plan
-            </li>
+           <li onClick={() => handleToolClick("UpgradePlanModal")}> 
+            <LightningIcon /> Upgrade Plan
+          </li>
         </ul>
         <p className="beta-notice">
             <Alert /> This is a Beta version of our Demo. Please be aware that some of the features and access to certain tools will be limited.
           </p>
       </nav>
-
-      {/* Other dashboard content */}
-
-      {/* Render the modal when isShareModalOpen is true */}
-      {isShareModalOpen && (
-        <ShareDashboardModal onClose={handleCloseModal} />
-      )}
-
-      {/* Upgrade Plan Modal */}
-      {isUpgradeModalOpen && (
-        <UpgradePlanModal onClose={closeUpgradeModal} />
-      )}
-
       </div>
       
       <div className="main-content bg-background-color">
@@ -715,13 +705,14 @@ const DashboardV3: React.FC = () => {
 
         .nav-menu ul {
           flex-direction: row;
-          justify-content: space-around;
-          padding: 0 10px;
+          justify-content: space-evenly;
+          flex-wrap: wrap; /* This allows items to wrap to the next line */
+          padding: 10px;
           width: 100%;
         }
 
-        .nav-menu li {
-          flex: 1;
+         .nav-menu li {
+          flex: 1 0 45%; /* Allow items to take 45% of the container width */
           text-align: center;
           padding: 10px 0;
           font-size: 14px;
@@ -737,6 +728,16 @@ const DashboardV3: React.FC = () => {
       }
 
       @media (max-width: 480px) {
+        .nav-menu ul {
+          flex-wrap: wrap; /* Ensure items wrap on smaller devices */
+          justify-content: space-evenly; /* Evenly distribute space between items */
+        }
+
+        .nav-menu li {
+          flex: 1 0 100%; /* Each item will take full width */
+          text-align: center;
+          padding: 8px 0;
+        }
         .sidebar {
           flex-direction: column;
           height: auto;
