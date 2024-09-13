@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  checkMultipleAddresses,
-  fetchTransactionSummary,
-} from "@/utilities/apiUtils";
+import { checkMultipleAddresses, fetchTransactionSummary } from "@/utilities/apiUtils";
 
 type TransactionType = "Sent" | "Received";
 
@@ -26,7 +23,7 @@ interface TransactionSummary {
 
 interface CheckAddressResult {
   address: string;
-  status: "Fail" | "Pass";
+  status: "Fail" | "Pass" | "Warning";
   description?: string;
 }
 
@@ -171,9 +168,7 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
             {updatedTransactions.map((txn, index) => (
               <tr
                 key={index}
-                className={`text-center ${
-                  index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                }`}
+                className={`text-center ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
               >
                 <td className="py-2 px-4 border-b">
                   {new Date(txn.timestamp).toLocaleDateString()}

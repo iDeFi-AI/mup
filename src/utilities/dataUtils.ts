@@ -15,7 +15,7 @@ interface Transaction {
 export const fetchData = async (address: string, cryptocurrency: string): Promise<Transaction[] | null> => {
   switch (cryptocurrency.toLowerCase()) {
     case 'eth':
-      return fetchEtherscanData(address);
+      return fetchEtherscanData(address); // Fetch Ethereum transactions
     // case 'btc':  // Uncomment and implement if BTC support is added
     //   return fetchBlockCypherData(address);
     default:
@@ -28,23 +28,24 @@ export const fetchData = async (address: string, cryptocurrency: string): Promis
 export const generateOpenAIPrompt = (
   userAddress: string,
   transactions: Transaction[],
-  status: string // Pass or Fail
+  status: string // Pass, Fail, or Warning
 ): string => {
-  // Default to an empty array if transactions is undefined
-  const limitedTransactions = (transactions || []).slice(0, 10); // Limit transactions to avoid token issues
+  // Limit transactions to avoid token issues with the API
+  const limitedTransactions = (transactions || []).slice(0, 10);
 
   const transactionDetails = limitedTransactions
     .map(
       (txn, index) =>
-        `Transaction ${index + 1} - ${txn.type}: ${txn.usdAmount} USD involving ${txn.thirdPartyWallet}.`
+        `Transaction ${index + 1} - ${txn.type}: ${txn.usdAmount} USD involving ${txn.thirdPartyWallet}. Status: ${txn.flagged ? 'Flagged' : 'Safe'}.`
     )
     .join('\n');
 
   const prompt = `
     Analyze the Ethereum address ${userAddress} to identify patterns and relationships with other unique addresses found in the transaction details.
-    Focus on mapping out transaction patterns and identifying potential malicious activities.
-    Based on the status of FAIL OR PASS (${status}), provide recommendations for improving security and transaction practices.
-    IF the status is FAIL, indicate to not transact or interact with the address.
+    Focus on mapping out transaction patterns, identifying potential malicious activities, and relationships with flagged addresses (parents or children).
+    Based on the status of FAIL, PASS, or WARNING (${status}), provide recommendations for improving security and transaction practices.
+    IF the status is FAIL, indicate to not interact with the address.
+    IF the status is WARNING, caution about indirect involvement with flagged addresses and advise on preventive actions.
     ${transactionDetails}
   `;
 
@@ -57,20 +58,17 @@ export const generateOpenAIPrompt = (
 export const generateInsights = async (
   userAddress: string,
   transactions: Transaction[],
-  status: string // Pass or Fail
+  status: string // Pass, Fail, or Warning
 ): Promise<string | null> => {
   try {
-    // Ensure transactions is not undefined
-    const txns = transactions || [];
-    
-    const openAIPrompt = generateOpenAIPrompt(userAddress, txns, status);
+    const openAIPrompt = generateOpenAIPrompt(userAddress, transactions || [], status);
 
     const payload = {
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content: `Provide insights and recommendations for Ethereum address ${userAddress}. Consider the security status of PASS or FAIL: ${status}`,
+          content: `Provide insights and recommendations for Ethereum address ${userAddress}. The security status is: PASS, FAIL, or WARNING (${status}).`,
         },
         { role: 'user', content: openAIPrompt },
       ],
@@ -87,21 +85,20 @@ export const generateInsights = async (
       body: JSON.stringify(payload),
     });
 
-    console.log('Response status:', response.status);
     const responseData = await response.json();
     console.log('Response data:', responseData);
 
     if (responseData.choices && responseData.choices.length > 0) {
       const insightsText = responseData.choices[0]?.message?.content;
 
-      console.log('Insights:', insightsText);
-
-      if (insightsText !== undefined && insightsText !== null) {
+      if (insightsText) {
+        // Store the generated insights in Firebase or any storage backend
         await storeJsonData({
           insights: insightsText,
           timestamp: Date.now(),
           userAddress,
         });
+
         return insightsText;
       } else {
         console.error('Insights text is undefined or null.');
@@ -117,7 +114,7 @@ export const generateInsights = async (
   }
 };
 
-// Fetch data and metrics (not used if you directly call checkFlaggedAddress)
+// Fetch data and metrics for a given Ethereum address
 export const fetchDataAndMetrics = async (address: string) => {
   try {
     const response = await fetch(

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
-import ScoreTxns from "@/components/layouts/ScoreTxns";
+import ScoreTxnsV2 from "@/components/layouts/ScoreTxnsV2";
 import CodeTerminal from "@/components/layouts/CodeTerminal";
 import { pushAiInsights } from "@/utilities/firebaseClient";
 import {
@@ -350,7 +350,7 @@ const SourceDestination: React.FC = () => {
               </button>
               {showSourceTransactions && (
                 <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
-                  <ScoreTxns transactions={sourceTransactions} />
+                  <ScoreTxnsV2 transactions={sourceTransactions} />
                 </div>
               )}
             </div>
@@ -410,7 +410,7 @@ const SourceDestination: React.FC = () => {
               </button>
               {showDestinationTransactions && (
                 <div className="transactions-list max-h-64 overflow-y-auto border border-gray-200 rounded-md p-2">
-                  <ScoreTxns transactions={destinationTransactions} />
+                  <ScoreTxnsV2 transactions={destinationTransactions} />
                 </div>
               )}
             </div>

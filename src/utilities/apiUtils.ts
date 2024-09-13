@@ -135,4 +135,37 @@ export const analyzeTransactions = async (address: string, transactions: Transac
   }
 };
 
+/**
+ * Function to visualize a dataset either from an Ethereum address, local file, or Firebase.
+ * @param sourceType - 'local', 'firebase', or 'address'
+ * @param address - Ethereum address to visualize if applicable
+ * @param filename - Filename for Firebase or local source
+ * @param maxNodes - Maximum number of nodes to display
+ */
+export const visualizeDataset = async ({
+  sourceType,
+  address = null,
+  filename = null,
+  maxNodes = null,
+}: {
+  sourceType: 'local' | 'firebase' | 'address',
+  address?: string | null,
+  filename?: string | null,
+  maxNodes?: number | null,
+}) => {
+  try {
+    const response = await axios.post('/api/visualize_dataset', {
+      source_type: sourceType,
+      address,
+      filename,
+      max_nodes: maxNodes,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error visualizing dataset:', error);
+    return { error: 'Failed to visualize dataset' };
+  }
+};
+
 

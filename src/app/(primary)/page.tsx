@@ -35,11 +35,12 @@ import CommunicationHub from "./client-support/communication-hub";
 import ShareDashboardModal from "./client-support/share-dashboard";
 import UpgradePlanModal from "./upgrade/UpgradePlanModal";
 import CreateAgent from "./agents/create-agent"; // Import the Create Agent component
+import VisualizeWallet from "./metrics/visualize_wallet";
 
 const categories = {
-  ALL: ["SecurityCheck", "SourceDestination", "FinancialRoadmap", "InvestmentSimulator", "FinancialHealth", "CommunicationHub"],
+  ALL: ["SecurityCheck", "SourceDestination", "FinancialRoadmap", "InvestmentSimulator", "FinancialHealth", "CommunicationHub", "VisualizeWallet"],
   PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
-  METRICS: ["FinancialHealth"],
+  METRICS: ["FinancialHealth", "VisualizeWallet"],
   SECURITY: ["SecurityCheck", "SourceDestination"],
   CLIENT_SUPPORT: ["CommunicationHub"],
 };
@@ -168,6 +169,8 @@ const DashboardV3: React.FC = () => {
         return <UpgradePlanModal />;
       case "ShareDashboardModal":  // New case for Create Agent tool
         return <ShareDashboardModal />;
+      case "VisualizeWallet":  // New case for Create Agent tool
+        return <VisualizeWallet />;
       default:
         return renderToolGrid();
     }
@@ -720,6 +723,7 @@ const DashboardV3: React.FC = () => {
 
         .main-content {
           padding: 80px 10px 20px 10px;
+          margin-top: 300px
         }
 
         .wallet-management {

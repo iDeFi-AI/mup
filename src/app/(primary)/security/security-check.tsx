@@ -10,7 +10,7 @@ import {
   fetchEtherscanData,
 } from "@/utilities/apiUtils";
 import { connectWallet, syncWalletData } from "@/utilities/web3Utils";
-import { ShieldIcon } from '@/components/icons'; 
+import { ShieldIcon } from "@/components/icons";
 import { generateInsights } from "@/utilities/dataUtils";
 
 // Utility function to validate Ethereum address

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.idefi.ai/api';
+const API_BASE_URL =
+  process.env.NODE_ENV === 'development'
+    ? 'http://localhost:3001/api'
+    : 'https://api.idefi.ai/api';
+
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -78,6 +82,21 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Address is required' }, { status: 400 });
         }
         response = await axios.post(`${API_BASE_URL}/transaction_summary`, null, { params: { address: summaryAddress } });
+        break;
+      case 'visualize_dataset':  // New case for visualizing dataset
+        const { source_type, filename, max_nodes } = body;
+        const visualizeAddress = body.address;
+
+        if (!visualizeAddress && !filename) {
+          return NextResponse.json({ error: 'Either an address or a filename is required' }, { status: 400 });
+        }
+
+        response = await axios.post(`${API_BASE_URL}/visualize_dataset`, {
+          source_type,
+          address: visualizeAddress,
+          filename,
+          max_nodes,
+        });
         break;
       default:
         return NextResponse.json({ error: 'Invalid endpoint' }, { status: 400 });
