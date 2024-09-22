@@ -91,7 +91,8 @@ export const syncWalletData = async (accounts: string[]): Promise<void> => {
   }
 };
 
-export const signMessage = async (message: string): Promise<string | null> => {
+// web3Utils.ts
+export const signMessage = async (message: string): Promise<string> => {
   try {
     if (web3 && typeof window !== 'undefined' && window.ethereum) {
       const accounts = await web3.eth.getAccounts();
@@ -99,16 +100,14 @@ export const signMessage = async (message: string): Promise<string | null> => {
         const signature = await web3.eth.personal.sign(message, accounts[0], "");
         return signature;
       } else {
-        console.warn('No accounts available for signing');
-        return null;
+        throw new Error('No accounts available for signing');
       }
     } else {
-      console.error('Web3 is not initialized or Ethereum is not available');
-      return null;
+      throw new Error('Web3 is not initialized or Ethereum is not available');
     }
   } catch (error) {
     console.error('Error signing message:', error);
-    return null;
+    throw new Error('Failed to sign message');
   }
 };
 

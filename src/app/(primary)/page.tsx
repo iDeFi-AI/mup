@@ -37,8 +37,22 @@ import UpgradePlanModal from "./upgrade/UpgradePlanModal";
 import CreateAgent from "./agents/create-agent"; // Import the Create Agent component
 import VisualizeWallet from "./metrics/visualize_wallet";
 
+// Define the tools with IDs, names, and labels
+const tools = [
+  { id: 1, name: "SecurityCheck", label: "Security Check", icon: ShieldIcon },
+  { id: 2, name: "SourceDestination", label: "Source & Destination", icon: ChecklistIcon },
+  { id: 3, name: "FinancialRoadmap", label: "Financial Roadmap", icon: GraphIcon },
+  { id: 4, name: "InvestmentSimulator", label: "Investment Simulator", icon: MoneyIcon },
+  { id: 5, name: "FinancialHealth", label: "Financial Health", icon: BalanceIcon },
+  { id: 6, name: "CommunicationHub", label: "Communication Hub", icon: ContractIcon },
+  { id: 7, name: "CreateAgent", label: "Create Agent", icon: Robot },
+  { id: 8, name: "VisualizeWallet", label: "Visualize Wallet", icon: AnalysisIcon },
+  { id: 9, name: "ShareDashboardModal", label: "Share Dashboard", icon: ContractIcon },
+  { id: 10, name: "UpgradePlanModal", label: "Upgrade Plan", icon: LightningIcon },
+];
+
 const categories = {
-  ALL: ["SecurityCheck", "SourceDestination", "FinancialRoadmap", "InvestmentSimulator", "FinancialHealth", "CommunicationHub", "VisualizeWallet"],
+  ALL: tools.map((tool) => tool.name),
   PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
   METRICS: ["FinancialHealth", "VisualizeWallet"],
   SECURITY: ["SecurityCheck", "SourceDestination"],
@@ -61,7 +75,7 @@ const DashboardV3: React.FC = () => {
 
   useEffect(() => {
     if (connectedAccounts.length > 0) {
-      syncWalletData(connectedAccounts.map(acc => acc.account));
+      syncWalletData(connectedAccounts.map((acc) => acc.account));
     }
   }, [connectedAccounts]);
 
@@ -87,7 +101,7 @@ const DashboardV3: React.FC = () => {
   };
 
   const handleDisconnectWallet = (account: string) => {
-    const updatedAccounts = connectedAccounts.filter(acc => acc.account !== account);
+    const updatedAccounts = connectedAccounts.filter((acc) => acc.account !== account);
     setConnectedAccounts(updatedAccounts);
     if (mainAccount === account) {
       setMainAccount(updatedAccounts.length > 0 ? updatedAccounts[0].account : null);
@@ -120,8 +134,8 @@ const DashboardV3: React.FC = () => {
   };
 
   const addManualAddress = () => {
-    if (manualAddress && !connectedAccounts.some(acc => acc.account === manualAddress)) {
-      setConnectedAccounts(prevAccounts => [...prevAccounts, { account: manualAddress, provider: "Manual" }]);
+    if (manualAddress && !connectedAccounts.some((acc) => acc.account === manualAddress)) {
+      setConnectedAccounts((prevAccounts) => [...prevAccounts, { account: manualAddress, provider: "Manual" }]);
       setMainAccount(manualAddress);
       setManualAddress("");
     } else {
@@ -137,68 +151,71 @@ const DashboardV3: React.FC = () => {
 
   const handleToolClick = (tool: string) => {
     setActiveTool(tool);
-    setRecents(prev => [tool, ...prev.filter(item => item !== tool)].slice(0, 5));
+    setRecents((prev) => [tool, ...prev.filter((item) => item !== tool)].slice(0, 5));
   };
 
   const toggleFavorite = (tool: string) => {
-    setFavorites(prev =>
-      prev.includes(tool) ? prev.filter(item => item !== tool) : [...prev, tool]
+    setFavorites((prev) =>
+      prev.includes(tool) ? prev.filter((item) => item !== tool) : [...prev, tool]
     );
   };
 
-  const handleCloseModal = () => {
-  };
-
   const renderActiveTool = () => {
-    switch (activeTool) {
-      case "SecurityCheck":
-        return <SecurityCheck />;
-      case "SourceDestination":
-        return <SourceDestination />;
-      case "FinancialRoadmap":
-        return <FinancialRoadmap />;
-      case "InvestmentSimulator":
-        return <InvestmentSimulator />;
-      case "FinancialHealth":
-        return <FinancialHealth />;
-      case "CommunicationHub":
-        return <CommunicationHub />;
-      case "CreateAgent":  // New case for Create Agent tool
-        return <CreateAgent />;
-      case "UpgradePlanModal":  // New case for Create Agent tool
-        return <UpgradePlanModal />;
-      case "ShareDashboardModal":  // New case for Create Agent tool
-        return <ShareDashboardModal />;
-      case "VisualizeWallet":  // New case for Create Agent tool
-        return <VisualizeWallet />;
-      default:
-        return renderToolGrid();
+    const tool = tools.find((t) => t.name === activeTool);
+
+    if (tool) {
+      switch (tool.name) {
+        case "SecurityCheck":
+          return <SecurityCheck />;
+        case "SourceDestination":
+          return <SourceDestination />;
+        case "FinancialRoadmap":
+          return <FinancialRoadmap />;
+        case "InvestmentSimulator":
+          return <InvestmentSimulator />;
+        case "FinancialHealth":
+          return <FinancialHealth />;
+        case "CommunicationHub":
+          return <CommunicationHub />;
+        case "CreateAgent":
+          return <CreateAgent />;
+        case "UpgradePlanModal":
+          return <UpgradePlanModal />;
+        case "ShareDashboardModal":
+          return <ShareDashboardModal />;
+        case "VisualizeWallet":
+          return <VisualizeWallet />;
+        default:
+          return renderToolGrid();
+      }
     }
+    return renderToolGrid();
   };
 
   const renderToolGrid = () => (
     <div className="grid-container">
-      {categories[activeCategory as keyof typeof categories].map((tool) => (
-        <div
-          key={tool}
-          className="grid-item"
-          onClick={() => handleToolClick(tool)}
-        >
-          <div className="icon-placeholder">
-            {tool === "SecurityCheck" ? <ShieldIcon /> : tool === "FinancialHealth" ? <BalanceIcon /> : <ChecklistIcon />}
+      {filteredTools.map((toolName) => {
+        const tool = tools.find((t) => t.name === toolName);
+        if (!tool) return null;
+
+        return (
+          <div key={tool.id} className="grid-item" onClick={() => handleToolClick(tool.name)}>
+            <div className="icon-placeholder">
+              <tool.icon />
+            </div>
+            <p>{tool.label}</p>
+            <span
+              className={`star-icon ${favorites.includes(tool.name) ? "favorited" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(tool.name);
+              }}
+            >
+              {favorites.includes(tool.name) ? "★" : "☆"}
+            </span>
           </div>
-          <p>{tool.replace(/([A-Z])/g, " $1")}</p> {/* Converts camelCase to readable format */}
-          <span
-            className={`star-icon ${favorites.includes(tool) ? "favorited" : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFavorite(tool);
-            }}
-          >
-            {favorites.includes(tool) ? "★" : "☆"}
-          </span>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 
@@ -223,67 +240,61 @@ const DashboardV3: React.FC = () => {
 
       <div className="sidebar">
         <div className="logo">
-          <Image 
-            src="/brandlogo.png" 
-            alt="iDEFi.AI Logo" 
-            width={150} 
-            height={50} 
-            className="logo-image"
-          />
+          <Image src="/brandlogo.png" alt="iDEFi.AI Logo" width={150} height={50} className="logo-image" />
         </div>
         <nav className="nav-menu">
-        <ul>
-          <li className={activeTool === null ? "active" : ""} onClick={() => setActiveTool(null)}>
-            <AdvisorIcon /> Agent Tools
-          </li>
+          <ul>
+            <li className={activeTool === null ? "active" : ""} onClick={() => setActiveTool(null)}>
+              <AdvisorIcon /> Agent Tools
+            </li>
 
-          <li onClick={() => setRecentsOpen(!recentsOpen)}>
-            <GraphIcon /> Recents {recentsOpen ? "▼" : "►"}
-          </li>
-          {recentsOpen && recents.length > 0 && (
+            <li onClick={() => setRecentsOpen(!recentsOpen)}>
+              <GraphIcon /> Recents {recentsOpen ? "▼" : "►"}
+            </li>
+            {recentsOpen && recents.length > 0 && (
               <ul className="sub-menu">
                 {recents.map((tool) => (
                   <li key={tool} onClick={() => handleToolClick(tool)}>
-                    {tool.replace(/([A-Z])/g, " $1")}
+                    {tools.find((t) => t.name === tool)?.label || tool}
                   </li>
                 ))}
               </ul>
             )}
 
-          <li onClick={() => setFavoritesOpen(!favoritesOpen)}>
-            <StarIcon /> Favorites {favoritesOpen ? "▼" : "►"}
-          </li>
-          {favoritesOpen && favorites.length > 0 && (
+            <li onClick={() => setFavoritesOpen(!favoritesOpen)}>
+              <StarIcon /> Favorites {favoritesOpen ? "▼" : "►"}
+            </li>
+            {favoritesOpen && favorites.length > 0 && (
               <ul className="sub-menu">
                 {favorites.map((tool) => (
                   <li key={tool} onClick={() => handleToolClick(tool)}>
-                    {tool.replace(/([A-Z])/g, " $1")}
+                    {tools.find((t) => t.name === tool)?.label || tool}
                   </li>
                 ))}
               </ul>
             )}
 
-          {/* Create Agent button with RobotIcon */}
-          <li onClick={() => handleToolClick("CreateAgent")}> 
-            <Robot /> Create an Agent
-          </li>
+            {/* Create Agent button with RobotIcon */}
+            <li onClick={() => handleToolClick("CreateAgent")}>
+              <Robot /> Create an Agent
+            </li>
 
-          {/* Share with Client button triggers the modal */}
-          <li onClick={() => handleToolClick("ShareDashboardModal")}> 
-            <ContractIcon /> Share with Client
-          </li>
+            {/* Share with Client button triggers the modal */}
+            <li onClick={() => handleToolClick("ShareDashboardModal")}>
+              <ContractIcon /> Share with Client
+            </li>
 
-           {/* Upgrade Plan button triggers the upgrade plan modal */}
-           <li onClick={() => handleToolClick("UpgradePlanModal")}> 
-            <LightningIcon /> Upgrade Plan
-          </li>
-        </ul>
-        <p className="beta-notice">
+            {/* Upgrade Plan button triggers the upgrade plan modal */}
+            <li onClick={() => handleToolClick("UpgradePlanModal")}>
+              <LightningIcon /> Upgrade Plan
+            </li>
+          </ul>
+          <p className="beta-notice">
             <Alert /> This is a Beta version of our Demo. Please be aware that some of the features and access to certain tools will be limited.
           </p>
-      </nav>
+        </nav>
       </div>
-      
+
       <div className="main-content bg-background-color">
         <div className="header">
           <div className="wallet-management">
@@ -319,7 +330,7 @@ const DashboardV3: React.FC = () => {
               </div>
             )}
             <button onClick={handleConnectWallet} className="connect-button">
-              <KeyIcon style={{ marginRight: '8px' }} />
+              <KeyIcon style={{ marginRight: "8px" }} />
               Connect and Sync Your Wallets
             </button>
           </div>
@@ -332,38 +343,38 @@ const DashboardV3: React.FC = () => {
               onChange={handleManualInput}
             />
             <button onClick={addManualAddress} className="add-button">
-              <PlusIcon style={{ marginRight: '8px' }} />
+              <PlusIcon style={{ marginRight: "8px" }} />
               Add
             </button>
           </div>
           <div className="filter-buttons">
-            <button 
-              className={`filter-button ${activeCategory === 'ALL' ? 'active' : ''}`} 
-              onClick={() => handleFilterClick('ALL')}
+            <button
+              className={`filter-button ${activeCategory === "ALL" ? "active" : ""}`}
+              onClick={() => handleFilterClick("ALL")}
             >
               ALL
             </button>
-            <button 
-              className={`filter-button ${activeCategory === 'PLANNING' ? 'active' : ''}`} 
-              onClick={() => handleFilterClick('PLANNING')}
+            <button
+              className={`filter-button ${activeCategory === "PLANNING" ? "active" : ""}`}
+              onClick={() => handleFilterClick("PLANNING")}
             >
               Planning
             </button>
-            <button 
-              className={`filter-button ${activeCategory === 'METRICS' ? 'active' : ''}`} 
-              onClick={() => handleFilterClick('METRICS')}
+            <button
+              className={`filter-button ${activeCategory === "METRICS" ? "active" : ""}`}
+              onClick={() => handleFilterClick("METRICS")}
             >
               Metrics
             </button>
-            <button 
-              className={`filter-button ${activeCategory === 'SECURITY' ? 'active' : ''}`} 
-              onClick={() => handleFilterClick('SECURITY')}
+            <button
+              className={`filter-button ${activeCategory === "SECURITY" ? "active" : ""}`}
+              onClick={() => handleFilterClick("SECURITY")}
             >
               Security
             </button>
-            <button 
-              className={`filter-button ${activeCategory === 'CLIENT_SUPPORT' ? 'active' : ''}`} 
-              onClick={() => handleFilterClick('CLIENT_SUPPORT')}
+            <button
+              className={`filter-button ${activeCategory === "CLIENT_SUPPORT" ? "active" : ""}`}
+              onClick={() => handleFilterClick("CLIENT_SUPPORT")}
             >
               Client Support
             </button>
@@ -730,7 +741,7 @@ const DashboardV3: React.FC = () => {
           max-width: 100%;
         }
       }
-
+        
       @media (max-width: 480px) {
         .nav-menu ul {
           flex-wrap: wrap; /* Ensure items wrap on smaller devices */
@@ -768,14 +779,38 @@ const DashboardV3: React.FC = () => {
       }
 
       @media (max-width: 360px) {
-        .sidebar {
-          padding: 5px;
-          height: 50px;
+        .nav-menu ul {
+          flex-wrap: wrap; /* Ensure items wrap on smaller devices */
+          justify-content: space-evenly; /* Evenly distribute space between items */
         }
 
-        .wallet-input-container {
+        .nav-menu li {
+          flex: 1 0 100%; /* Each item will take full width */
+          text-align: center;
+          padding: 8px 0;
+        }
+        .sidebar {
           flex-direction: column;
-          gap: 5px;
+          height: auto;
+        }
+
+        .wallet-management {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .wallet-summary {
+          width: 100%;
+        }
+
+        .connect-button {
+          width: 100%;
+          justify-content: center;
         }
       }
     `}</style>
