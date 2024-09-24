@@ -19,7 +19,10 @@ import {
   faAtom,
   faMoneyBill1,
   faTriangleExclamation,
-  faRobot  // Added for Quantum Agents
+  faRobot,
+  faIdCard,
+  faBell,
+  faInfoCircle // Added for Quantum Agents
 } from '@fortawesome/free-solid-svg-icons';
 
 interface IconProps extends Omit<FontAwesomeIconProps, 'icon'> {}
@@ -99,5 +102,20 @@ export const Alert: React.FC<IconProps> = (props) => (
 
 export const Robot: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faRobot} {...props} />
+
+);
+
+export const IdCard: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faIdCard} {...props} />
+
+);
+
+export const Bell: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faBell} {...props} />
+
+);
+
+export const Info: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faInfoCircle} {...props} />
 
 );

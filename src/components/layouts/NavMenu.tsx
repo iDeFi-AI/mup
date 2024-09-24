@@ -4,7 +4,7 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import NextImage from 'next/image';
 import Link from 'next/link';
 
-import LogoImage from '@/assets/imgs/logo.png';
+import LogoImage from '@/assets/imgs/agent-header.png';
 
 const NavMenu: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);

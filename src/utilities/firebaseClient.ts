@@ -1,7 +1,7 @@
-// firebaseClient.ts
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, GithubAuthProvider } from 'firebase/auth';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { getFirestore, addDoc, collection } from 'firebase/firestore'; // Firestore for email triggers
 
 interface Transaction {
   timestamp: string;
@@ -14,10 +14,9 @@ interface Transaction {
 
 interface InsightsResponse {
   openAIResponse?: string | null;
-  userAddress: string; // Include the userAddress property
+  userAddress: string;
   insights: string;
   timestamp: number;
-  // Add other properties as needed
 }
 
 const config = {
@@ -33,6 +32,9 @@ const config = {
 
 const app = initializeApp(config);
 const auth = getAuth();
+const firestore = getFirestore(app); // Initialize Firestore
+const database = getDatabase(app);
+
 // Providers
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
@@ -40,9 +42,6 @@ const githubProvider = new GithubAuthProvider();
 // Sign-in functions
 const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 const signInWithGithub = () => signInWithPopup(auth, githubProvider);
-
-const database = getDatabase(app);
-
 
 const signInWithEmailPassword = (email: string, password: string) => {
   return signInWithEmailAndPassword(auth, email, password);
@@ -54,11 +53,12 @@ const createAccountWithEmailPassword = (email: string, password: string) => {
 
 // Realtime Database operations
 const jsondataRef = ref(database, 'jsondata');
-const useridRef = ref(database, 'userid'); // new reference for JSON data
+const useridRef = ref(database, 'userid');
 const insightsRef = ref(database, 'insights');
 const transactionsRef = ref(database, 'transactions');
-const sanctionedAddressesRef = ref(database, 'sanctionedAddresses'); // New reference for sanctioned addresses
+const sanctionedAddressesRef = ref(database, 'sanctionedAddresses');
 
+// Store JSON data in Firebase
 const storeJsonData = (jsonData: any) => {
   return push(jsondataRef, jsonData);
 };
@@ -82,17 +82,28 @@ const pushAiInsights = (data: InsightsResponse) => {
     timestamp: data.timestamp,
     userAddress: data.userAddress,
     insights: data.insights,
-    // Add other fields if needed
   })
     .then(() => console.log('Insights pushed successfully'))
     .catch((error) => console.error('Error pushing insights:', error));
 };
 
+// Real-time transaction listener
 const listenToTransactions = (callback: (data: Transaction[] | null) => void) => {
   onValue(transactionsRef, (snapshot) => {
     const data = snapshot.val();
     callback(data as Transaction[] | null);
   });
+};
+
+// Trigger email notifications via Firestore collection
+const triggerEmailNotification = async (emailData: any) => {
+  try {
+    const mailCollectionRef = collection(firestore, 'mail');
+    await addDoc(mailCollectionRef, emailData);
+    console.log("Email notification triggered.");
+  } catch (error) {
+    console.error("Error triggering email notification:", error);
+  }
 };
 
 export {
@@ -111,5 +122,6 @@ export {
   pushAiInsights,
   storeJsonData,
   storeUserId,
-  storeSanctionedAddress, // include the new function
+  storeSanctionedAddress,
+  triggerEmailNotification, // Export for triggering email
 };

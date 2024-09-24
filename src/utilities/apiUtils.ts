@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 // Define the Transaction type to use consistently
 export interface Transaction {
@@ -33,7 +33,7 @@ const mapRiskLevel = (risk: string): 'High' | 'Medium' | 'Low' | 'None' => {
   }
 };
 
-// Fetch transactions and metrics from the backend API
+// Fetch transactions and metrics from the backend API (iDefi API)
 export const fetchDataAndMetrics = async (address: string) => {
   try {
     const response = await axios.get('/api/endpoints', {
@@ -42,7 +42,7 @@ export const fetchDataAndMetrics = async (address: string) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching data and metrics:', error);
-    return null;
+    throw new Error('Failed to fetch data and metrics.');
   }
 };
 
@@ -56,10 +56,9 @@ export const fetchTransactionSummary = async (address: string) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching transaction summary:', error);
-    return null;
+    throw new Error('Failed to fetch transaction summary.');
   }
 };
-
 
 // Check if the address is flagged
 export const checkFlaggedAddress = async (address: string) => {
@@ -70,14 +69,12 @@ export const checkFlaggedAddress = async (address: string) => {
     return response.data;
   } catch (error) {
     console.error('Error checking flagged address:', error);
-    return null;
+    throw new Error('Failed to check flagged address.');
   }
 };
 
 // Fetch transactions from Etherscan directly
-export const fetchEtherscanData = async (
-  address: string
-): Promise<Transaction[]> => {
+export const fetchEtherscanData = async (address: string): Promise<Transaction[]> => {
   const ethApiKey = 'QEX6DGCMDRPXRU89FKPUR4BG9AUMCR4FXD';
   const ethUrl = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${ethApiKey}`;
 
@@ -87,14 +84,14 @@ export const fetchEtherscanData = async (
 
     if (ethData.status === '1') {
       return ethData.result.map((tx: any, index: number) => ({
-        id: tx.hash || index.toString(), // Use transaction hash as ID or index as fallback
+        id: tx.hash || index.toString(),
         timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString(),
         type: address.toLowerCase() === tx.from.toLowerCase() ? 'Sent' : 'Received',
         cryptocurrency: 'ETH',
         usdAmount: parseFloat(tx.value) / 1e18,
         thirdPartyWallet: address.toLowerCase() === tx.from.toLowerCase() ? tx.to : tx.from,
         flagged: false,
-        risk: mapRiskLevel(tx.risk || 'None'), // Ensure the risk is mapped correctly
+        risk: mapRiskLevel(tx.risk || 'None'),
       }));
     } else {
       console.error('Error fetching Etherscan data:', ethData.message);
@@ -102,7 +99,7 @@ export const fetchEtherscanData = async (
     }
   } catch (error) {
     console.error('Error fetching Etherscan data:', error);
-    return [];
+    throw new Error('Failed to fetch Etherscan data.');
   }
 };
 
@@ -116,7 +113,7 @@ export const checkMultipleAddresses = async (addresses: string[]) => {
     return response.data;
   } catch (error) {
     console.error('Error checking multiple addresses:', error);
-    return null;
+    throw new Error('Failed to check multiple addresses.');
   }
 };
 
@@ -131,7 +128,21 @@ export const analyzeTransactions = async (address: string, transactions: Transac
     return response.data;
   } catch (error) {
     console.error('Error analyzing transactions:', error);
-    return null;
+    throw new Error('Failed to analyze transactions.');
+  }
+};
+
+// Monitor address (new function)
+export const monitorAddress = async (address: string) => {
+  try {
+    const response = await axios.post('/api/endpoints', {
+      endpoint: 'monitor_address',
+      address,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error monitoring address:', error);
+    throw new Error('Failed to monitor the address.');
   }
 };
 
@@ -168,4 +179,65 @@ export const visualizeDataset = async ({
   }
 };
 
+/**
+ * Quantum API Integration (internal routing to quantum API)
+ */
+export const quantumRiskAnalysis = async (portfolio: any) => {
+  try {
+    const response = await axios.get('/api/quantum', {
+      params: { action: 'quantumRiskAnalysis', portfolio: JSON.stringify(portfolio) },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error during quantum risk analysis:', error);
+    throw new Error('Failed to perform quantum risk analysis.');
+  }
+};
 
+export const portfolioOptimization = async (portfolio: any) => {
+  try {
+    const response = await axios.get('/api/quantum', {
+      params: { action: 'portfolioOptimization', portfolio: JSON.stringify(portfolio) },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error during portfolio optimization:', error);
+    throw new Error('Failed to optimize portfolio.');
+  }
+};
+
+export const compileAndRunQASM = async (filename: string, useIBMBackend: boolean) => {
+  try {
+    const response = await axios.get('/api/quantum', {
+      params: { action: 'compileAndRunQASM', filename, useIBMBackend: useIBMBackend.toString() },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error compiling and running QASM:', error);
+    throw new Error('Failed to compile and run QASM.');
+  }
+};
+
+export const storeQuantumStateInMemory = async (state: string) => {
+  try {
+    const response = await axios.get('/api/quantum', {
+      params: { action: 'storeQuantumStateInMemory', state },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error storing quantum state in memory:', error);
+    throw new Error('Failed to store quantum state in memory.');
+  }
+};
+
+export const retrieveQuantumStateFromMemory = async () => {
+  try {
+    const response = await axios.get('/api/quantum', {
+      params: { action: 'retrieveQuantumStateFromMemory' },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error retrieving quantum state from memory:', error);
+    throw new Error('Failed to retrieve quantum state from memory.');
+  }
+};

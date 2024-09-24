@@ -251,7 +251,6 @@ const SourceDestination: React.FC = () => {
       <section className="flex flex-col items-center justify-center py-8 px-4 w-full max-w-6xl bg-white shadow-lg rounded-lg">
         {alertMessage && <div className="alert">{alertMessage}</div>}
         <div className="mb-6">
-          <Image src="/brandlogo.png" alt="brand logo" width={150} height={150} className="mx-auto" />
         </div>
         <h4 className="text-2xl font-semibold mb-8">Enter Wallet Address to Check On Status</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">

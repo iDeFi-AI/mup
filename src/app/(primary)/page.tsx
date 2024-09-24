@@ -24,7 +24,9 @@ import {
   CopyIcon,
   LightningIcon,
   Alert,
-  Robot, // Assuming RobotIcon is for "Create Agent"
+  Robot,
+  IdCard,
+  Bell
 } from "@/components/icons";
 import SecurityCheck from "./security/security-check";
 import SourceDestination from "./security/source-destination";
@@ -36,6 +38,8 @@ import ShareDashboardModal from "./client-support/share-dashboard";
 import UpgradePlanModal from "./upgrade/UpgradePlanModal";
 import CreateAgent from "./agents/create-agent"; // Import the Create Agent component
 import VisualizeWallet from "./metrics/visualize_wallet";
+import DidManagementPage from "./identity/identity-manager";
+import Notifications from "./alerts/notifications";
 
 // Define the tools with IDs, names, and labels
 const tools = [
@@ -49,6 +53,9 @@ const tools = [
   { id: 8, name: "VisualizeWallet", label: "Visualize Wallet", icon: AnalysisIcon },
   { id: 9, name: "ShareDashboardModal", label: "Share Dashboard", icon: ContractIcon },
   { id: 10, name: "UpgradePlanModal", label: "Upgrade Plan", icon: LightningIcon },
+  { id: 11, name: "DidManagementPage", label: "DID Manager", icon: IdCard },
+  { id: 12, name: "Notifications", label: "Alert Manager", icon: Bell },
+
 ];
 
 const categories = {
@@ -56,7 +63,7 @@ const categories = {
   PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
   METRICS: ["FinancialHealth", "VisualizeWallet"],
   SECURITY: ["SecurityCheck", "SourceDestination"],
-  CLIENT_SUPPORT: ["CommunicationHub"],
+  CLIENT_SUPPORT: ["CommunicationHub", "DidManagementPage", "Notifications"],
 };
 
 const DashboardV3: React.FC = () => {
@@ -185,6 +192,11 @@ const DashboardV3: React.FC = () => {
           return <ShareDashboardModal />;
         case "VisualizeWallet":
           return <VisualizeWallet />;
+        case "DidManagementPage":
+          return <DidManagementPage />;
+        case "Notifications":
+            return <Notifications />;
+          Notifications
         default:
           return renderToolGrid();
       }
@@ -240,7 +252,7 @@ const DashboardV3: React.FC = () => {
 
       <div className="sidebar">
         <div className="logo">
-          <Image src="/brandlogo.png" alt="iDEFi.AI Logo" width={150} height={50} className="logo-image" />
+          <Image src="/agent.png" alt="iDEFi.AI Logo" width={150} height={50} className="logo-image" />
         </div>
         <nav className="nav-menu">
           <ul>

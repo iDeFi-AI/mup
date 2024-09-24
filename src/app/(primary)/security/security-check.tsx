@@ -130,13 +130,6 @@ const SecurityCheck: React.FC = () => {
       
       <div className="w-full max-w-lg bg-white shadow-lg rounded-lg p-6 mb-8">
         <div className="mb-6">
-          <Image
-            src="/brandlogo.png"
-            alt="brand logo"
-            width={150}
-            height={150}
-            className="mx-auto"
-          />
         </div>
         <h2 className="text-3xl font-bold mb-6">Security Check</h2>
       

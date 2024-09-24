@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-background-color min-h-screen flex flex-col">
         <header className="w-full bg-white shadow-md py-4 flex justify-between items-center px-4">
           <div className="text-xl font-semibold">
-            <img src="/brandlogo.png" alt="iDeFi.AI" className="h-8 inline-block" />
+            <img src="/agent-header.png" alt="iDeFi.AI" className="h-8 inline-block" />
             <span className="ml-2">(beta)</span>
           </div>
         </header>

@@ -69,6 +69,13 @@ export async function POST(request: Request) {
         }
         response = await axios.post(`${API_BASE_URL}/analyze_transactions`, { address, transactions });
         break;
+      case 'monitor_address': // New case for monitor_address
+        const { address: monitorAddress } = body;
+        if (!monitorAddress) {
+          return NextResponse.json({ error: 'Address is required' }, { status: 400 });
+        }
+        response = await axios.post(`${API_BASE_URL}/monitor_address`, { address: monitorAddress });
+        break;  
       case 'check_multiple_addresses':
         const { addresses } = body;
         if (!addresses || !Array.isArray(addresses) || addresses.length === 0) {
