@@ -26,7 +26,8 @@ import {
   Alert,
   Robot,
   IdCard,
-  Bell
+  Bell,
+  AtomIcon
 } from "@/components/icons";
 import SecurityCheck from "./security/security-check";
 import SourceDestination from "./security/source-destination";
@@ -40,6 +41,10 @@ import CreateAgent from "./agents/create-agent"; // Import the Create Agent comp
 import VisualizeWallet from "./metrics/visualize_wallet";
 import DidManagementPage from "./identity/identity-manager";
 import Notifications from "./alerts/notifications";
+import AgentBoard from "./agents/agent-board";
+import AgentManager from "./agents/agent-manager";
+import RetirementPlanning from "./planning/retirement-planning";
+import QuantumCategory from "./quantum/quantum-tools";
 
 // Define the tools with IDs, names, and labels
 const tools = [
@@ -55,6 +60,10 @@ const tools = [
   { id: 10, name: "UpgradePlanModal", label: "Upgrade Plan", icon: LightningIcon },
   { id: 11, name: "DidManagementPage", label: "DID Manager", icon: IdCard },
   { id: 12, name: "Notifications", label: "Alert Manager", icon: Bell },
+  { id: 13, name: "AgentBoard", label: "Agent Board", icon: AnalysisIcon },
+  { id: 14, name: "AgentManager", label: "Agent Manager", icon: Robot },
+  { id: 15, name: "RetirementPlanning", label: "Financial Planning", icon: SavingsIcon },
+  { id: 16, name: "QuantumCategory", label: "Quantum", icon: AtomIcon },
 
 ];
 
@@ -62,6 +71,7 @@ const categories = {
   ALL: tools.map((tool) => tool.name),
   PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
   METRICS: ["FinancialHealth", "VisualizeWallet"],
+  AGENTS: ["CreateAgent", "AgentBoard", "AgentManager"],
   SECURITY: ["SecurityCheck", "SourceDestination"],
   CLIENT_SUPPORT: ["CommunicationHub", "DidManagementPage", "Notifications"],
 };
@@ -195,7 +205,15 @@ const DashboardV3: React.FC = () => {
         case "DidManagementPage":
           return <DidManagementPage />;
         case "Notifications":
-            return <Notifications />;
+          return <Notifications />;
+        case "RetirementPlanning":
+            return <RetirementPlanning />;
+        case "AgentBoard":
+          return <AgentBoard />;
+        case "AgentManager":
+          return <AgentManager />;
+        case "QuantumCategory":
+            return <QuantumCategory />;
           Notifications
         default:
           return renderToolGrid();

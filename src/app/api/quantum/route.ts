@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const QUANTUM_API_BASE_URL = 'https://q.idef.ai/api';
+const QUANTUM_API_BASE_URL = 'https://q.idefi.ai/api';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
