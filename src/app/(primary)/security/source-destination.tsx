@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Head from "next/head";
-import Image from "next/image";
 import ScoreTxnsV2 from "@/components/layouts/ScoreTxnsV2";
 import CodeTerminal from "@/components/layouts/CodeTerminal";
 import { pushAiInsights } from "@/utilities/firebaseClient";

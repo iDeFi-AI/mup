@@ -26,11 +26,11 @@ export async function GET(request: Request) {
         }
         response = await axios.get(`${API_BASE_URL}/checkaddress`, { params: { address } });
         break;
-      case 'get_data_and_metrics':
+      case 'data_and_metrics':
         if (!address) {
           return NextResponse.json({ error: 'Address is required' }, { status: 400 });
         }
-        response = await axios.get(`${API_BASE_URL}/get_data_and_metrics`, { params: { address } });
+        response = await axios.get(`${API_BASE_URL}/data_and_metrics`, { params: { address } });
         break;
       case 'download':
         if (!filename) {

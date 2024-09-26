@@ -37,7 +37,7 @@ const mapRiskLevel = (risk: string): 'High' | 'Medium' | 'Low' | 'None' => {
 export const fetchDataAndMetrics = async (address: string) => {
   try {
     const response = await axios.get('/api/endpoints', {
-      params: { endpoint: 'get_data_and_metrics', address },
+      params: { endpoint: 'data_and_metrics', address },
     });
     return response.data;
   } catch (error) {
@@ -50,7 +50,7 @@ export const fetchDataAndMetrics = async (address: string) => {
 export const fetchCapitalGainsMetrics = async (address: string) => {
   try {
     const response = await axios.get('/api/endpoints', {
-      params: { endpoint: 'get_data_and_metrics', address },
+      params: { endpoint: 'data_and_metrics', address },
     });
     return response.data.metrics.capitalGains;  // Assuming 'capitalGains' is part of the 'metrics'
   } catch (error) {
@@ -193,7 +193,9 @@ export const visualizeDataset = async ({
   maxNodes?: number | null,
 }) => {
   try {
-    const response = await axios.post('/api/visualize_dataset', {
+    // Sending POST request to Next.js API route
+    const response = await axios.post('/api/endpoints', {
+      endpoint: 'visualize_dataset',
       source_type: sourceType,
       address,
       filename,
@@ -203,9 +205,10 @@ export const visualizeDataset = async ({
     return response.data;
   } catch (error) {
     console.error('Error visualizing dataset:', error);
-    return { error: 'Failed to visualize dataset' };
+    throw new Error('Failed to visualize dataset.');
   }
 };
+
 
 /**
  * Quantum API Integration (internal routing to quantum API)

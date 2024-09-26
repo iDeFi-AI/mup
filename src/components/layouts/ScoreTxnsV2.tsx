@@ -34,7 +34,7 @@ interface ScoreTxnsV2Props {
 const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [updatedTransactions, setUpdatedTransactions] = useState<Transaction[]>([]);
-  const [status, setStatus] = useState<"Fail" | "Pass" | "Yellow" | null>(null);
+  const [status, setStatus] = useState<"Fail" | "Pass" | "Warning" | null>(null);
 
   useEffect(() => {
     const fetchSummaryData = async () => {
@@ -69,7 +69,7 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
             if (primaryCheckResult?.status === "Fail") {
               setStatus("Fail");
             } else if (parentOrChildFail) {
-              setStatus("Yellow");
+              setStatus("Warning");
             } else {
               setStatus("Pass");
             }
@@ -134,7 +134,7 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
           </p>
         </div>
       );
-    } else if (status === "Yellow" && summary) {
+    } else if (status === "Warning" && summary) {
       return (
         <div className="summary-card bg-yellow-200 shadow-md rounded-lg p-6 mb-6">
           <p className="text-lg text-yellow-800">

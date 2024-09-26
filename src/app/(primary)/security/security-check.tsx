@@ -22,8 +22,7 @@ const isValidAddress = (address: string): boolean => {
 const SecurityCheck: React.FC = () => {
   const [address, setAddress] = useState<string>("");
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-  const [status, setStatus] = useState<"Pass" | "Fail" | "Yellow" | null>(null);
-  const [overallScore, setOverallScore] = useState<number | null>(null);
+  const [status, setStatus] = useState<"Pass" | "Fail" | "Warning" | null>(null);
   const [metrics, setMetrics] = useState<Record<string, any>>({});
   const [transactions, setTransactions] = useState<any[]>([]);
   const [insights, setInsights] = useState<string | null>(null);
@@ -43,42 +42,16 @@ const SecurityCheck: React.FC = () => {
 
     try {
       const flaggedResponse = await checkFlaggedAddress(address);
-      const dataAndMetrics = await fetchDataAndMetrics(address);
       const transactionHistory = await fetchEtherscanData(address);
 
-      let calculatedStatus: "Pass" | "Fail" | "Yellow" = "Pass";
-      let calculatedScore = 100;
-
-      // Check if the address was flagged or if there is any transaction data
-      if (flaggedResponse || transactionHistory.length > 0) {
-        const { status: flaggedStatus, metrics: flaggedMetrics } = flaggedResponse || {};
-        const { score, additionalMetrics } = dataAndMetrics || {};
-
-        if (flaggedStatus === "Fail") {
-          calculatedStatus = "Fail";
-          calculatedScore = 20;
-        } else if (flaggedStatus === "Pass" && score < 50) {
-          calculatedStatus = "Fail";
-          calculatedScore = score;
-        } else if (score >= 50 && score < 71) {
-          calculatedStatus = "Yellow";
-          calculatedScore = score;
-        } else {
-          calculatedStatus = "Pass";
-          calculatedScore = score;
-        }
-
-        setMetrics({ ...flaggedMetrics, ...additionalMetrics });
+      if (flaggedResponse?.status) {
+        setStatus(flaggedResponse.status); // PASS, FAIL, or WARNING from backend
+        setMetrics(flaggedResponse.metrics || {}); // If there are any additional metrics
         setTransactions(transactionHistory);
       } else {
-        // No transaction history or flag means the address is safe by default
-        setAlertMessage("No transaction history or flags found. Address is considered safe.");
-        calculatedStatus = "Pass";
-        calculatedScore = 100;
+        setAlertMessage("No relevant data found. Address is considered safe.");
+        setStatus("Pass");
       }
-
-      setStatus(calculatedStatus);
-      setOverallScore(calculatedScore);
     } catch (error) {
       console.error("Error during status check:", error);
       setAlertMessage("Failed to check status. Please try again.");
@@ -119,18 +92,21 @@ const SecurityCheck: React.FC = () => {
   };
 
   const getHexagonImage = () => {
-    if (overallScore === null) return "/hexagon-yellow.png";
-    if (overallScore >= 71) return "/hexagon-green.png";
-    if (overallScore <= 20) return "/hexagon-red.png";
-    return "/hexagon-green.png"; // Default to green if overallScore isn't covered above
+    switch (status) {
+      case "Pass":
+        return "/hexagon-green.png";
+      case "Fail":
+        return "/hexagon-red.png";
+      case "Warning":
+        return "/hexagon-yellow.png";
+      default:
+        return "/hexagon-yellow.png"; // Default to yellow if status is null
+    }
   };
 
   return (
     <div className="min-h-screen bg-background-color flex flex-col items-center text-center p-6">
-      
       <div className="w-full max-w-lg bg-white shadow-lg rounded-lg p-6 mb-8">
-        <div className="mb-6">
-        </div>
         <h2 className="text-3xl font-bold mb-6">Security Check</h2>
       
         {/* Arch Image with input box */}
@@ -141,9 +117,6 @@ const SecurityCheck: React.FC = () => {
           {status && (
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <Image src={getHexagonImage()} alt="Hexagon status" width={100} height={115} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl font-bold text-white">{overallScore !== null ? overallScore : ""}</span>
-              </div>
             </div>
           )}
         </div>

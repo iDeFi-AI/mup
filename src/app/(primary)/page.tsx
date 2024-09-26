@@ -27,7 +27,7 @@ import {
   Robot,
   IdCard,
   Bell,
-  AtomIcon
+  AtomIcon,
 } from "@/components/icons";
 import SecurityCheck from "./security/security-check";
 import SourceDestination from "./security/source-destination";
@@ -64,7 +64,6 @@ const tools = [
   { id: 14, name: "AgentManager", label: "Agent Manager", icon: Robot },
   { id: 15, name: "RetirementPlanning", label: "Financial Planning", icon: SavingsIcon },
   { id: 16, name: "QuantumCategory", label: "Quantum", icon: AtomIcon },
-
 ];
 
 const categories = {
@@ -207,14 +206,13 @@ const DashboardV3: React.FC = () => {
         case "Notifications":
           return <Notifications />;
         case "RetirementPlanning":
-            return <RetirementPlanning />;
+          return <RetirementPlanning />;
         case "AgentBoard":
           return <AgentBoard />;
         case "AgentManager":
           return <AgentManager />;
         case "QuantumCategory":
-            return <QuantumCategory />;
-          Notifications
+          return <QuantumCategory />;
         default:
           return renderToolGrid();
       }
@@ -415,287 +413,287 @@ const DashboardV3: React.FC = () => {
       </div>
 
       <style jsx>{`
-      .dashboard-container {
-        display: flex;
-        height: 100vh;
-        background-color: #f8f9fa;
-        overflow: hidden;
-      }
+        .dashboard-container {
+          display: flex;
+          height: 100vh;
+          background-color: #f8f9fa;
+          overflow: hidden;
+        }
 
-      .sidebar {
-        width: 240px;
-        background-color: white;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        border-right: 1px solid #E0E0E0;
-        overflow-y: auto;
-        transition: all 0.3s ease;
-      }
+        .sidebar {
+          width: 240px;
+          background-color: white;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: center;
+          border-right: 1px solid #E0E0E0;
+          overflow-y: auto;
+          transition: all 0.3s ease;
+        }
 
-      .logo {
-        margin-bottom: 30px;
-      }
+        .logo {
+          margin-bottom: 30px;
+        }
 
-      .logo-image {
-        max-width: 150px;
-        height: auto;
-      }
+        .logo-image {
+          max-width: 150px;
+          height: auto;
+        }
 
-      .nav-menu ul {
-        list-style: none;
-        padding: 0;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-      }
+        .nav-menu ul {
+          list-style: none;
+          padding: 0;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+        }
 
-      .nav-menu li {
-        padding: 15px 20px;
-        font-size: 16px;
-        color: #757575;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        border-radius: 8px;
-        transition: background-color 0.3s, color 0.3s;
-      }
+        .nav-menu li {
+          padding: 15px 20px;
+          font-size: 16px;
+          color: #757575;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          border-radius: 8px;
+          transition: background-color 0.3s, color 0.3s;
+        }
 
-      .nav-menu li.active,
-      .nav-menu li:hover {
-        color: #FF7E2F;
-        background-color: #f2f2f2;
-        font-weight: bold;
-      }
+        .nav-menu li.active,
+        .nav-menu li:hover {
+          color: #FF7E2F;
+          background-color: #f2f2f2;
+          font-weight: bold;
+        }
 
-      .sub-menu {
-        padding-left: 20px;
-        margin-top: 5px;
-      }
+        .sub-menu {
+          padding-left: 20px;
+          margin-top: 5px;
+        }
 
-      .sub-menu li {
-        padding: 10px;
-        font-size: 14px;
-        color: #555;
-        cursor: pointer;
-        border-radius: 6px;
-        transition: background-color 0.3s, color 0.3s;
-      }
+        .sub-menu li {
+          padding: 10px;
+          font-size: 14px;
+          color: #555;
+          cursor: pointer;
+          border-radius: 6px;
+          transition: background-color 0.3s, color 0.3s;
+        }
 
-      .sub-menu li:hover {
-        color: #FF7E2F;
-        background-color: #f2f2f2;
-      }
+        .sub-menu li:hover {
+          color: #FF7E2F;
+          background-color: #f2f2f2;
+        }
 
-      .upgrade-section {
-        margin-top: auto;
-        text-align: center;
-      }
+        .upgrade-section {
+          margin-top: auto;
+          text-align: center;
+        }
 
-      .upgrade-button {
-        background-color: #FF7E2F;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        margin-bottom: 10px;
-      }
+        .upgrade-button {
+          background-color: #FF7E2F;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          margin-bottom: 10px;
+        }
 
-      .main-content {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        transition: all 0.3s ease;
-      }
+        .main-content {
+          flex: 1;
+          padding: 20px;
+          overflow-y: auto;
+          transition: all 0.3s ease;
+        }
 
-      .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 30px;
-      }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 30px;
+        }
 
-      .wallet-management {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-        max-width: 600px;
-      }
+        .wallet-management {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          width: 100%;
+          max-width: 600px;
+        }
 
-      .wallet-summary {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        background-color: #f2f2f2;
-        border-radius: 8px;
-        cursor: pointer;
-      }
+        .wallet-summary {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px;
+          background-color: #f2f2f2;
+          border-radius: 8px;
+          cursor: pointer;
+        }
 
-      .wallet-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
+        .wallet-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
 
-      .wallet-address {
-        font-size: 14px;
-        color: #333;
-      }
+        .wallet-address {
+          font-size: 14px;
+          color: #333;
+        }
 
-      .copy-button,
-      .disconnect-button {
-        background-color: #FF7E2F;
-        color: white;
-        padding: 5px 10px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-      }
+        .copy-button,
+        .disconnect-button {
+          background-color: #FF7E2F;
+          color: white;
+          padding: 5px 10px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+        }
 
-      .wallet-dropdown {
-        margin-top: 10px;
-        padding: 10px;
-        background-color: white;
-        border: 1px solid #E0E0E0;
-        border-radius: 8px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-        max-height: 200px;
-        overflow-y: auto;
-      }
+        .wallet-dropdown {
+          margin-top: 10px;
+          padding: 10px;
+          background-color: white;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+          max-height: 200px;
+          overflow-y: auto;
+        }
 
-      .wallet-dropdown div:hover {
+        .wallet-dropdown div:hover {
           background-color: #f2f2f2;
           transition: background-color 0.3s;
           cursor: pointer;
         }
 
-      .connect-button {
-        background-color: #FF7E2F;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-      }
+        .connect-button {
+          background-color: #FF7E2F;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          margin-top: 10px;
+        }
 
-      .wallet-input-container {
-        display: flex;
-        gap: 10px;
-        flex: 1;
-        margin-top: 10px;
-        width: 100%;
-      }
+        .wallet-input-container {
+          display: flex;
+          gap: 10px;
+          flex: 1;
+          margin-top: 10px;
+          width: 100%;
+        }
 
-      .wallet-input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #E0E0E0;
-        border-radius: 8px;
-        font-size: 16px;
-      }
+        .wallet-input {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          font-size: 16px;
+        }
 
-      .add-button {
-        background-color: #007bff;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-      }
+        .add-button {
+          background-color: #007bff;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+        }
 
-      .filter-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        width: 100%;
-        margin-top: 10px;
-      }
+        .filter-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          width: 100%;
+          margin-top: 10px;
+        }
 
-      .filter-button {
-        background-color: #F1F0EB;
-        color: #333;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background-color 0.3s, color 0.3s;
-        flex: 1;
-      }
+        .filter-button {
+          background-color: #F1F0EB;
+          color: #333;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.3s, color 0.3s;
+          flex: 1;
+        }
 
-      .filter-button.active,
-      .filter-button:hover {
-        background-color: #FF7E2F;
-        color: white;
-      }
+        .filter-button.active,
+        .filter-button:hover {
+          background-color: #FF7E2F;
+          color: white;
+        }
 
-      .grid-container {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        width: 100%;
-      }
+        .grid-container {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          width: 100%;
+        }
 
-      .grid-item {
-        background-color: white;
-        border: 1px solid #E0E0E0;
-        border-radius: 12px;
-        height: 150px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        cursor: pointer;
-        transition: transform 0.3s, box-shadow 0.3s;
-        position: relative;
-      }
+        .grid-item {
+          background-color: white;
+          border: 1px solid #E0E0E0;
+          border-radius: 12px;
+          height: 150px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          cursor: pointer;
+          transition: transform 0.3s, box-shadow 0.3s;
+          position: relative;
+        }
 
-      .grid-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
-      }
+        .grid-item:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
 
-      .icon-placeholder {
-        margin-bottom: 10px;
-      }
+        .icon-placeholder {
+          margin-bottom: 10px;
+        }
 
-      .grid-item p {
-        font-size: 14px;
-        color: #757575;
-      }
+        .grid-item p {
+          font-size: 14px;
+          color: #757575;
+        }
 
-      .star-icon {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        font-size: 20px;
-        color: #FFD700;
-      }
+        .star-icon {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          cursor: pointer;
+          font-size: 20px;
+          color: #FFD700;
+        }
 
-      .star-icon.favorited {
-        color: #FF7E2F;
-      }
+        .star-icon.favorited {
+          color: #FF7E2F;
+        }
 
-       .beta-notice {
+        .beta-notice {
           margin-top: 20px;
           padding: 10px;
           background-color: #fff3cd;
@@ -708,142 +706,144 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
         }
 
-      @media (max-width: 1200px) {
-        .grid-container {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-
-      @media (max-width: 1024px) {
-        .grid-container {
-          grid-template-columns: repeat(2, 1fr);
+        @media (max-width: 1200px) {
+          .grid-container {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
-        .sidebar {
-          width: 200px;
-        }
-      }
+        @media (max-width: 1024px) {
+          .grid-container {
+            grid-template-columns: repeat(2, 1fr);
+          }
 
-      @media (max-width: 768px) {
-        .grid-container {
-          grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          width: 100%;
-          padding: 10px;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-direction: row;
-          z-index: 1000;
-          border-right: none;
-          border-bottom: 1px solid #E0E0E0;
-          background-color: white;
-          transition: all 0.3s ease;
+          .sidebar {
+            width: 200px;
+          }
         }
 
-        .nav-menu ul {
-          flex-direction: row;
-          justify-content: space-evenly;
-          flex-wrap: wrap; /* This allows items to wrap to the next line */
-          padding: 10px;
-          width: 100%;
+        @media (max-width: 768px) {
+          .grid-container {
+            grid-template-columns: 1fr;
+          }
+
+          .sidebar {
+            width: 100%;
+            padding: 10px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-direction: row;
+            z-index: 1000;
+            border-right: none;
+            border-bottom: 1px solid #E0E0E0;
+            background-color: white;
+            transition: all 0.3s ease;
+          }
+
+          .nav-menu ul {
+            flex-direction: row;
+            justify-content: space-evenly;
+            flex-wrap: wrap; /* This allows items to wrap to the next line */
+            padding: 10px;
+            width: 100%;
+          }
+
+          .nav-menu li {
+            flex: 1 0 45%; /* Allow items to take 45% of the container width */
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+          }
+
+          .main-content {
+            padding: 80px 10px 20px 10px;
+            margin-top: 300px;
+          }
+
+          .wallet-management {
+            max-width: 100%;
+          }
         }
 
-         .nav-menu li {
-          flex: 1 0 45%; /* Allow items to take 45% of the container width */
-          text-align: center;
-          padding: 10px 0;
-          font-size: 14px;
+        @media (max-width: 480px) {
+          .nav-menu ul {
+            flex-wrap: wrap; /* Ensure items wrap on smaller devices */
+            justify-content: space-evenly; /* Evenly distribute space between items */
+          }
+
+          .nav-menu li {
+            flex: 1 0 100%; /* Each item will take full width */
+            text-align: center;
+            padding: 8px 0;
+          }
+
+          .sidebar {
+            flex-direction: column;
+            height: auto;
+          }
+
+          .wallet-management {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+
+          .wallet-summary {
+            width: 100%;
+          }
+
+          .connect-button {
+            width: 100%;
+            justify-content: center;
+          }
         }
 
-        .main-content {
-          padding: 80px 10px 20px 10px;
-          margin-top: 300px
-        }
+        @media (max-width: 360px) {
+          .nav-menu ul {
+            flex-wrap: wrap; /* Ensure items wrap on smaller devices */
+            justify-content: space-evenly; /* Evenly distribute space between items */
+          }
 
-        .wallet-management {
-          max-width: 100%;
-        }
-      }
-        
-      @media (max-width: 480px) {
-        .nav-menu ul {
-          flex-wrap: wrap; /* Ensure items wrap on smaller devices */
-          justify-content: space-evenly; /* Evenly distribute space between items */
-        }
+          .nav-menu li {
+            flex: 1 0 100%; /* Each item will take full width */
+            text-align: center;
+            padding: 8px 0;
+          }
 
-        .nav-menu li {
-          flex: 1 0 100%; /* Each item will take full width */
-          text-align: center;
-          padding: 8px 0;
-        }
-        .sidebar {
-          flex-direction: column;
-          height: auto;
-        }
+          .sidebar {
+            flex-direction: column;
+            height: auto;
+          }
 
-        .wallet-management {
-          flex-direction: column;
-          align-items: flex-start;
-        }
+          .wallet-management {
+            flex-direction: column;
+            align-items: flex-start;
+          }
 
-        .header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
+          .header {
+            flex-direction: column;
+            align-items: flex-start;
+          }
 
-        .wallet-summary {
-          width: 100%;
-        }
+          .wallet-summary {
+            width: 100%;
+          }
 
-        .connect-button {
-          width: 100%;
-          justify-content: center;
+          .connect-button {
+            width: 100%;
+            justify-content: center;
+          }
         }
-      }
-
-      @media (max-width: 360px) {
-        .nav-menu ul {
-          flex-wrap: wrap; /* Ensure items wrap on smaller devices */
-          justify-content: space-evenly; /* Evenly distribute space between items */
-        }
-
-        .nav-menu li {
-          flex: 1 0 100%; /* Each item will take full width */
-          text-align: center;
-          padding: 8px 0;
-        }
-        .sidebar {
-          flex-direction: column;
-          height: auto;
-        }
-
-        .wallet-management {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .wallet-summary {
-          width: 100%;
-        }
-
-        .connect-button {
-          width: 100%;
-          justify-content: center;
-        }
-      }
-    `}</style>
+      `}</style>
     </div>
   );
 };
