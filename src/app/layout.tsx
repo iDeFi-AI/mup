@@ -25,13 +25,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="bg-background-color min-h-full">
       <body className="bg-background-color min-h-screen flex flex-col">
-        <header className="w-full bg-white shadow-md py-4 flex justify-between items-center px-4">
-          <div className="text-xl font-semibold">
+        {/* Centering the header content */}
+        <header className="w-full bg-white shadow-md py-6 flex justify-center items-center">
+          <div className="text-xl font-semibold flex items-center">
             <img src="/agent-header.png" alt="iDeFi.AI" className="h-12 inline-block" />
             <span className="ml-2">(beta)</span>
           </div>
         </header>
-        <main className="flex-grow py-8">
+        <main className="flex-grow ">
           {children}
           <Analytics />
         </main>
@@ -40,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             © 2024 iDeFi.AI - All Rights Reserved
           </p>
           <p className="text-sm text-gray-500">
-          <Link href="/terms" className="text-gray-900 hover:text-neorange">Beta Terms</Link>
+            <Link href="/terms" className="text-gray-900 hover:text-neorange">Beta Terms</Link>
           </p>
         </footer>
       </body>

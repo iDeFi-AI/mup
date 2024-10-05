@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, GithubAuthProvider } from 'firebase/auth';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
-import { getFirestore, addDoc, collection } from 'firebase/firestore'; // Firestore for email triggers
+import { getFirestore, addDoc, collection, getDoc, doc,  setDoc, } from 'firebase/firestore'; // Firestore for email triggers
 
 interface Transaction {
   timestamp: string;
@@ -96,14 +96,49 @@ const listenToTransactions = (callback: (data: Transaction[] | null) => void) =>
 };
 
 // Trigger email notifications via Firestore collection
-const triggerEmailNotification = async (emailData: any) => {
+const triggerEmailNotification = async (subject: string, messageText: string, email: string) => {
   try {
     const mailCollectionRef = collection(firestore, 'mail');
+    const emailData = {
+      to: [email],
+      message: {
+        subject: subject,
+        text: messageText,
+        html: `<p>${messageText}</p>`,
+      },
+    };
     await addDoc(mailCollectionRef, emailData);
     console.log("Email notification triggered.");
   } catch (error) {
     console.error("Error triggering email notification:", error);
   }
+};
+
+// Fetch user notification preferences from Firestore
+const getUserNotificationPreferences = async (uid: string) => {
+  const docRef = doc(firestore, "users", uid);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return docSnap.data();
+  } else {
+    return null;
+  }
+};
+
+// Save user notification preferences to Firestore
+const saveUserNotificationPreferences = async (
+  uid: string | null,
+  notificationPreferences: any,
+  walletAddress: string
+) => {
+  if (!uid) return;
+
+  const docRef = doc(firestore, "users", uid);
+  await setDoc(docRef, {
+    walletAddress,
+    notificationPreferences,
+  });
 };
 
 export {
@@ -123,5 +158,7 @@ export {
   storeJsonData,
   storeUserId,
   storeSanctionedAddress,
-  triggerEmailNotification, // Export for triggering email
+  triggerEmailNotification,
+  getUserNotificationPreferences,
+  saveUserNotificationPreferences, // Export for triggering email
 };

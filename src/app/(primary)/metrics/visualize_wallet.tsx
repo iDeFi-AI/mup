@@ -2,15 +2,27 @@
 
 import React, { useState } from 'react';
 import { visualizeDataset } from '@/utilities/apiUtils';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 
 const VisualizeWallet: React.FC = () => {
-  const [sourceType, setSourceType] = useState<'local' | 'firebase' | 'address'>('address');
+  const [sourceType, setSourceType] = useState<'local' | 'address'>('address');
   const [address, setAddress] = useState<string>('');
   const [filename, setFilename] = useState<string>('');
   const [maxNodes, setMaxNodes] = useState<number | null>(null);
   const [visualizationUrl, setVisualizationUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper function to shorten the URL
+  const shortenUrl = (url: string) => {
+    if (url.length > 50) {
+      return `${url.slice(0, 50)}...${url.slice(-10)}`;
+    }
+    return url;
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -48,19 +60,23 @@ const VisualizeWallet: React.FC = () => {
           <label className="block text-gray-700 font-bold mb-2">Source Type</label>
           <select
             value={sourceType}
-            onChange={(e) => setSourceType(e.target.value as 'local' | 'firebase' | 'address')}
+            onChange={(e) => setSourceType(e.target.value as 'local' | 'address')}
             className="w-full p-2 border rounded focus:outline-none"
           >
             <option value="address">Ethereum Address</option>
             <option value="local">Local Dataset</option>
-            <option value="firebase">Firebase Dataset</option>
           </select>
         </div>
 
         {/* Ethereum Address Input */}
         {sourceType === 'address' && (
           <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Ethereum Address</label>
+            <label className="block text-gray-700 font-bold mb-2 flex items-center">
+              Ethereum Address
+              <Tippy content="Enter a valid Ethereum address to visualize the wallet's relationships.">
+                <FontAwesomeIcon icon={faInfoCircle} className="text-gray-500 ml-2" />
+              </Tippy>
+            </label>
             <input
               type="text"
               value={address}
@@ -71,10 +87,15 @@ const VisualizeWallet: React.FC = () => {
           </div>
         )}
 
-        {/* Filename Input for Local/Firebase */}
-        {(sourceType === 'local' || sourceType === 'firebase') && (
+        {/* Filename Input for Local */}
+        {sourceType === 'local' && (
           <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Filename</label>
+            <label className="block text-gray-700 font-bold mb-2 flex items-center">
+              Filename
+              <Tippy content="Specify the filename for the local dataset you wish to visualize.">
+                <FontAwesomeIcon icon={faInfoCircle} className="text-gray-500 ml-2" />
+              </Tippy>
+            </label>
             <input
               type="text"
               value={filename}
@@ -87,7 +108,12 @@ const VisualizeWallet: React.FC = () => {
 
         {/* Max Nodes Input */}
         <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Max Nodes</label>
+          <label className="block text-gray-700 font-bold mb-2 flex items-center">
+            Max Nodes
+            <Tippy content="Limit the maximum number of nodes to visualize for clarity.">
+              <FontAwesomeIcon icon={faInfoCircle} className="text-gray-500 ml-2" />
+            </Tippy>
+          </label>
           <input
             type="number"
             value={maxNodes || ''}
@@ -111,30 +137,32 @@ const VisualizeWallet: React.FC = () => {
         {/* Error Message */}
         {error && <p className="text-red-500 mt-4">{error}</p>}
 
-        {/* Visualization Link */}
+        {/* Visualization Iframe */}
         {visualizationUrl && (
           <div className="visualization-container mt-4">
             <p className="text-green-500">Visualization generated:</p>
-            <a
-              href={visualizationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-500 underline"
-            >
-              View Visualization
-            </a>
+            <p>
+              Visualization URL:{" "}
+              <a href={visualizationUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                {shortenUrl(visualizationUrl)}
+              </a>
+            </p>
+            <iframe
+              src={visualizationUrl}
+              className="w-full h-96 border rounded-md shadow-md mt-4"
+              allowFullScreen
+            ></iframe>
           </div>
         )}
       </div>
 
       <style jsx>{`
-        .visualize-wallet-page {
-          background-color: #f7f9fc;
-          padding: 20px;
+        .visualization-container {
+          margin-top: 20px;
         }
-        .form-container {
+        iframe {
           width: 100%;
-          max-width: 600px;
+          height: 400px;
         }
       `}</style>
     </div>

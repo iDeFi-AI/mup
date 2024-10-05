@@ -1,99 +1,108 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+'use client';
+import React, { useState, useEffect } from 'react';
+import { getAuth, signOut } from 'firebase/auth'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBell, faSignOutAlt, faBars, faTimes } from '@fortawesome/free-solid-svg-icons'; // Added faBars and faTimes for mobile sidebar
+import Image from 'next/image';
 import {
   connectWallet,
   disconnectWallet,
   syncWalletData,
-} from "@/utilities/web3Utils";
-import WalletSelectionModal from "@/components/wallets";
+} from '@/utilities/web3Utils';
+import WalletSelectionModal from '@/components/wallets';
 import {
-  AnalysisIcon,
   ShieldIcon,
   GraphIcon,
   KeyIcon,
   MoneyIcon,
   BalanceIcon,
   AdvisorIcon,
-  ContractIcon,
-  SavingsIcon,
-  ChecklistIcon,
-  StarIcon,
   PlusIcon,
   CopyIcon,
   LightningIcon,
   Alert,
   Robot,
-  IdCard,
-  Bell,
-  AtomIcon,
-} from "@/components/icons";
-import SecurityCheck from "./security/security-check";
-import SourceDestination from "./security/source-destination";
-import FinancialRoadmap from "./planning/financial-roadmap";
-import InvestmentSimulator from "./planning/investment-simulator";
-import FinancialHealth from "./metrics/financial-health";
-import CommunicationHub from "./client-support/communication-hub";
-import ShareDashboardModal from "./client-support/share-dashboard";
-import UpgradePlanModal from "./upgrade/UpgradePlanModal";
-import CreateAgent from "./agents/create-agent"; // Import the Create Agent component
-import VisualizeWallet from "./metrics/visualize_wallet";
-import DidManagementPage from "./identity/identity-manager";
-import Notifications from "./alerts/notifications";
-import AgentBoard from "./agents/agent-board";
-import AgentManager from "./agents/agent-manager";
-import RetirementPlanning from "./planning/retirement-planning";
-import QuantumCategory from "./quantum/quantum-tools";
+  StarIcon,
+  ContractIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from '@/components/icons';
+import SecurityCheck from './security/security-check';
+import FinancialRoadmap from './planning/financial-roadmap';
+import InvestmentSimulator from './planning/investment-simulator';
+import VisualizeWallet from './metrics/visualize_wallet';
+import CreateAgent from './agents/create-agent';
+import ShareDashboardModal from './client-support/share-dashboard';
+import UpgradePlanModal from './upgrade/UpgradePlanModal';
+import AgentBoard from './agents/agent-board';
+import AgentManager from './agents/agent-manager';
+import Notifications from './alerts/notifications';
 
-// Define the tools with IDs, names, and labels
+// Simulate fetching alerts from an API or database
+const getAlerts = async () => {
+  return new Promise<string[]>((resolve) => {
+    setTimeout(() => {
+      resolve([]); // Example alerts
+    }, 1000);
+  });
+};
+
 const tools = [
-  { id: 1, name: "SecurityCheck", label: "Security Check", icon: ShieldIcon },
-  { id: 2, name: "SourceDestination", label: "Source & Destination", icon: ChecklistIcon },
-  { id: 3, name: "FinancialRoadmap", label: "Financial Roadmap", icon: GraphIcon },
-  { id: 4, name: "InvestmentSimulator", label: "Investment Simulator", icon: MoneyIcon },
-  { id: 5, name: "FinancialHealth", label: "Financial Health", icon: BalanceIcon },
-  { id: 6, name: "CommunicationHub", label: "Communication Hub", icon: ContractIcon },
-  { id: 7, name: "CreateAgent", label: "Create Agent", icon: Robot },
-  { id: 8, name: "VisualizeWallet", label: "Visualize Wallet", icon: AnalysisIcon },
-  { id: 9, name: "ShareDashboardModal", label: "Share Dashboard", icon: ContractIcon },
-  { id: 10, name: "UpgradePlanModal", label: "Upgrade Plan", icon: LightningIcon },
-  { id: 11, name: "DidManagementPage", label: "DID Manager", icon: IdCard },
-  { id: 12, name: "Notifications", label: "Alert Manager", icon: Bell },
-  { id: 13, name: "AgentBoard", label: "Agent Board", icon: AnalysisIcon },
-  { id: 14, name: "AgentManager", label: "Agent Manager", icon: Robot },
-  { id: 15, name: "RetirementPlanning", label: "Financial Planning", icon: SavingsIcon },
-  { id: 16, name: "QuantumCategory", label: "Quantum", icon: AtomIcon },
+  { id: 1, name: 'SecurityCheck', label: 'Security Check', icon: ShieldIcon, active: true },
+  { id: 2, name: 'FinancialRoadmap', label: 'Financial Roadmap', icon: GraphIcon, active: true },
+  { id: 3, name: 'InvestmentSimulator', label: 'Investment Simulator', icon: MoneyIcon, active: true },
+  { id: 4, name: 'VisualizeWallet', label: 'Visualize Wallet', icon: BalanceIcon, active: true },
+];
+
+const sideMenuTools = [
+  { id: 5, name: 'CreateAgent', label: 'Create Agent', icon: Robot, active: true },
+  { id: 6, name: 'AgentBoard', label: 'Agent Board', icon: Robot, active: true },
+  { id: 7, name: 'AgentManager', label: 'Agent Manager', icon: Robot, active: true },
+  { id: 8, name: 'ShareDashboardModal', label: 'Share with Client', icon: ContractIcon, active: true },
+  { id: 9, name: 'UpgradePlanModal', label: 'Upgrade Plan', icon: LightningIcon, active: true },
+  { id: 10, name: 'Notifications', label: 'Notifications', icon: faBell, active: true },
 ];
 
 const categories = {
   ALL: tools.map((tool) => tool.name),
-  PLANNING: ["FinancialRoadmap", "InvestmentSimulator"],
-  METRICS: ["FinancialHealth", "VisualizeWallet"],
-  AGENTS: ["CreateAgent", "AgentBoard", "AgentManager"],
-  SECURITY: ["SecurityCheck", "SourceDestination"],
-  CLIENT_SUPPORT: ["CommunicationHub", "DidManagementPage", "Notifications"],
+  PLANNING: ['FinancialRoadmap', 'InvestmentSimulator'],
+  METRICS: ['VisualizeWallet'],
+  SECURITY: ['SecurityCheck'],
+  CLIENT_SUPPORT: ['ShareDashboardModal'],
 };
 
 const DashboardV3: React.FC = () => {
   const [connectedAccounts, setConnectedAccounts] = useState<{ account: string; provider: string }[]>([]);
-  const [manualAddress, setManualAddress] = useState<string>("");
+  const [manualAddress, setManualAddress] = useState<string>('');
   const [mainAccount, setMainAccount] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [recents, setRecents] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [filteredTools, setFilteredTools] = useState<string[]>(categories.ALL);
-  const [activeCategory, setActiveCategory] = useState<string>("ALL");
+  const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [recentsOpen, setRecentsOpen] = useState<boolean>(true);
   const [favoritesOpen, setFavoritesOpen] = useState<boolean>(true);
   const [showWalletModal, setShowWalletModal] = useState<boolean>(false);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [createAgentDropdownOpen, setCreateAgentDropdownOpen] = useState<boolean>(false);
+  const [activeAlerts, setActiveAlerts] = useState<string[]>([]);
+  const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Added state for sidebar toggle
 
   useEffect(() => {
     if (connectedAccounts.length > 0) {
       syncWalletData(connectedAccounts.map((acc) => acc.account));
     }
   }, [connectedAccounts]);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      const alerts = await getAlerts();
+      setActiveAlerts(alerts);
+    };
+
+    fetchAlerts();
+  }, []);
 
   const handleConnectWallet = () => {
     setShowWalletModal(true);
@@ -103,17 +112,20 @@ const DashboardV3: React.FC = () => {
     const accounts = await connectWallet(provider);
     if (accounts) {
       const uniqueAccounts = Array.from(
-        new Set([
-          ...connectedAccounts,
-          ...accounts.map((account: string) => ({ account, provider })),
-        ])
+        new Set([...connectedAccounts, ...accounts.map((account: string) => ({ account, provider }))])
       );
       setConnectedAccounts(uniqueAccounts);
-      setMainAccount(uniqueAccounts[0].account); // Set the first account as the main account
+      setMainAccount(uniqueAccounts[0].account);
       setShowWalletModal(false);
     } else {
-      alert("Failed to connect wallet. Please try again.");
+      alert('Failed to connect wallet. Please try again.');
     }
+  };
+
+  const handleLogout = async () => {
+    const auth = getAuth();
+    await signOut(auth);
+    window.location.href = '/';
   };
 
   const handleDisconnectWallet = (account: string) => {
@@ -127,11 +139,19 @@ const DashboardV3: React.FC = () => {
 
   const copyToClipboard = (account: string) => {
     navigator.clipboard.writeText(account);
-    alert("Address copied to clipboard!");
+    alert('Address copied to clipboard!');
   };
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
+  };
+
+  const toggleCreateAgentDropdown = () => {
+    setCreateAgentDropdownOpen(!createAgentDropdownOpen);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const shortenAddress = (address: string) => {
@@ -151,11 +171,11 @@ const DashboardV3: React.FC = () => {
 
   const addManualAddress = () => {
     if (manualAddress && !connectedAccounts.some((acc) => acc.account === manualAddress)) {
-      setConnectedAccounts((prevAccounts) => [...prevAccounts, { account: manualAddress, provider: "Manual" }]);
+      setConnectedAccounts((prevAccounts) => [...prevAccounts, { account: manualAddress, provider: 'Manual' }]);
       setMainAccount(manualAddress);
-      setManualAddress("");
+      setManualAddress('');
     } else {
-      alert("This address is already added or invalid.");
+      alert('This address is already added or invalid.');
     }
   };
 
@@ -166,6 +186,7 @@ const DashboardV3: React.FC = () => {
   };
 
   const handleToolClick = (tool: string) => {
+    setShowNotifications(false);
     setActiveTool(tool);
     setRecents((prev) => [tool, ...prev.filter((item) => item !== tool)].slice(0, 5));
   };
@@ -176,48 +197,48 @@ const DashboardV3: React.FC = () => {
     );
   };
 
-  const renderActiveTool = () => {
-    const tool = tools.find((t) => t.name === activeTool);
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications);
+    setActiveTool('Notifications');
+  };
 
+  const renderActiveTool = () => {
+    if (showNotifications && activeTool === 'Notifications') {
+      return <Notifications />;
+    }
+
+    const tool = tools.find((t) => t.name === activeTool);
     if (tool) {
       switch (tool.name) {
-        case "SecurityCheck":
+        case 'SecurityCheck':
           return <SecurityCheck />;
-        case "SourceDestination":
-          return <SourceDestination />;
-        case "FinancialRoadmap":
+        case 'FinancialRoadmap':
           return <FinancialRoadmap />;
-        case "InvestmentSimulator":
+        case 'InvestmentSimulator':
           return <InvestmentSimulator />;
-        case "FinancialHealth":
-          return <FinancialHealth />;
-        case "CommunicationHub":
-          return <CommunicationHub />;
-        case "CreateAgent":
-          return <CreateAgent />;
-        case "UpgradePlanModal":
-          return <UpgradePlanModal />;
-        case "ShareDashboardModal":
-          return <ShareDashboardModal />;
-        case "VisualizeWallet":
+        case 'VisualizeWallet':
           return <VisualizeWallet />;
-        case "DidManagementPage":
-          return <DidManagementPage />;
-        case "Notifications":
-          return <Notifications />;
-        case "RetirementPlanning":
-          return <RetirementPlanning />;
-        case "AgentBoard":
-          return <AgentBoard />;
-        case "AgentManager":
-          return <AgentManager />;
-        case "QuantumCategory":
-          return <QuantumCategory />;
         default:
           return renderToolGrid();
       }
     }
-    return renderToolGrid();
+
+    switch (activeTool) {
+      case 'CreateAgent':
+        return <CreateAgent />;
+      case 'AgentBoard':
+        return <AgentBoard />;
+      case 'AgentManager':
+        return <AgentManager />;
+      case 'ShareDashboardModal':
+        return <ShareDashboardModal />;
+      case 'UpgradePlanModal':
+        return <UpgradePlanModal />;
+      case 'Notifications':
+        return <Notifications />;
+      default:
+        return renderToolGrid();
+    }
   };
 
   const renderToolGrid = () => (
@@ -227,19 +248,23 @@ const DashboardV3: React.FC = () => {
         if (!tool) return null;
 
         return (
-          <div key={tool.id} className="grid-item" onClick={() => handleToolClick(tool.name)}>
+          <div
+            key={tool.id}
+            className={`grid-item ${tool.active ? '' : 'grayed-out'}`}
+            onClick={() => tool.active && handleToolClick(tool.name)}
+          >
             <div className="icon-placeholder">
               <tool.icon />
             </div>
             <p>{tool.label}</p>
             <span
-              className={`star-icon ${favorites.includes(tool.name) ? "favorited" : ""}`}
+              className={`star-icon ${favorites.includes(tool.name) ? 'favorited' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleFavorite(tool.name);
               }}
             >
-              {favorites.includes(tool.name) ? "★" : "☆"}
+              {favorites.includes(tool.name) ? '★' : '☆'}
             </span>
           </div>
         );
@@ -247,37 +272,28 @@ const DashboardV3: React.FC = () => {
     </div>
   );
 
-  const getWalletLogo = (provider: string) => {
-    if (provider === "MetaMask") {
-      return "/metamask-logo.png";
-    } else if (provider === "CoinbaseWallet") {
-      return "/coinbase-logo.png";
-    } else {
-      return "/logo.png";
-    }
-  };
-
   return (
     <div className="dashboard-container">
       {showWalletModal && (
-        <WalletSelectionModal
-          onSelect={handleWalletSelect}
-          onClose={() => setShowWalletModal(false)}
-        />
+        <WalletSelectionModal onSelect={handleWalletSelect} onClose={() => setShowWalletModal(false)} />
       )}
+  
+      <button className="hamburger-button" onClick={toggleSidebar}>
+        <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
+      </button>
 
-      <div className="sidebar">
+      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="logo">
-          <Image src="/agent.png" alt="iDEFi.AI Logo" width={150} height={50} className="logo-image" />
+          <Image src="/agent.png" alt="iDEFi.AI Logo" width={100} height={50} className="logo-image" />
         </div>
         <nav className="nav-menu">
           <ul>
-            <li className={activeTool === null ? "active" : ""} onClick={() => setActiveTool(null)}>
+            <li className={activeTool === null ? 'active' : ''} onClick={() => setActiveTool(null)}>
               <AdvisorIcon /> Agent Tools
             </li>
-
+  
             <li onClick={() => setRecentsOpen(!recentsOpen)}>
-              <GraphIcon /> Recents {recentsOpen ? "▼" : "►"}
+              <GraphIcon /> Recents {recentsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </li>
             {recentsOpen && recents.length > 0 && (
               <ul className="sub-menu">
@@ -288,9 +304,9 @@ const DashboardV3: React.FC = () => {
                 ))}
               </ul>
             )}
-
+  
             <li onClick={() => setFavoritesOpen(!favoritesOpen)}>
-              <StarIcon /> Favorites {favoritesOpen ? "▼" : "►"}
+              <StarIcon /> Favorites {favoritesOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </li>
             {favoritesOpen && favorites.length > 0 && (
               <ul className="sub-menu">
@@ -301,41 +317,63 @@ const DashboardV3: React.FC = () => {
                 ))}
               </ul>
             )}
-
-            {/* Create Agent button with RobotIcon */}
-            <li onClick={() => handleToolClick("CreateAgent")}>
-              <Robot /> Create an Agent
+  
+            {/* Create Agent button with dropdown */}
+            <li onClick={toggleCreateAgentDropdown}>
+              <Robot /> Create Agent {createAgentDropdownOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </li>
-
-            {/* Share with Client button triggers the modal */}
-            <li onClick={() => handleToolClick("ShareDashboardModal")}>
+            {createAgentDropdownOpen && (
+              <ul className="sub-menu">
+                <li onClick={() => handleToolClick('CreateAgent')}>Create New Agent</li>
+                <li onClick={() => handleToolClick('AgentBoard')}>Agent Board</li>
+                <li onClick={() => handleToolClick('AgentManager')}>Agent Manager</li>
+              </ul>
+            )}
+  
+            {/* Notifications Bell */}
+            <li className="notification-item" onClick={handleNotificationClick}>
+              <FontAwesomeIcon icon={faBell} className={activeAlerts.length > 0 ? 'alert-active' : ''} />
+              <span>Notifications</span>
+              {activeAlerts.length > 0 && <span className="notification-count">{activeAlerts.length}</span>}
+            </li>
+  
+            {/* Share with Client */}
+            <li onClick={() => handleToolClick('ShareDashboardModal')}>
               <ContractIcon /> Share with Client
             </li>
-
-            {/* Upgrade Plan button triggers the upgrade plan modal */}
-            <li onClick={() => handleToolClick("UpgradePlanModal")}>
+  
+            {/* Upgrade Plan */}
+            <li onClick={() => handleToolClick('UpgradePlanModal')}>
               <LightningIcon /> Upgrade Plan
             </li>
           </ul>
-          <p className="beta-notice">
-            <Alert /> This is a Beta version of our Demo. Please be aware that some of the features and access to certain tools will be limited.
-          </p>
+  
+          {/* Logout Button */}
+          <ul>
+            <li className="logout-button" onClick={handleLogout}>
+              <FontAwesomeIcon icon={faSignOutAlt} /> Log Out
+            </li>
+          </ul>
+          <div className="beta-notice">
+          <Alert /> This is a Beta version of our Demo. Please be aware that some features and tools may be limited.
+        </div>
         </nav>
       </div>
-
+  
       <div className="main-content bg-background-color">
         <div className="header">
+          {/* Wallet management section */}
           <div className="wallet-management">
             <div className="wallet-summary" onClick={toggleDropdown}>
-              <span>{mainAccount ? shortenAddress(mainAccount) : "No Wallet Connected"}</span>
-              <span>{showDropdown ? "▲" : "▼"}</span>
+              <span>{mainAccount ? shortenAddress(mainAccount) : 'No Wallet Connected'}</span>
+              <span>{showDropdown ? '▲' : '▼'}</span>
             </div>
             {showDropdown && (
               <div className="wallet-dropdown">
                 {connectedAccounts.map(({ account, provider }, index) => (
                   <div key={index} className="wallet-info" onClick={() => setMainAccount(account)}>
                     <Image
-                      src={getWalletLogo(provider)}
+                      src={provider === 'MetaMask' ? '/metamask-logo.png' : '/coinbase-logo.png'}
                       alt="Wallet Logo"
                       width={24}
                       height={24}
@@ -357,58 +395,64 @@ const DashboardV3: React.FC = () => {
                 ))}
               </div>
             )}
+
             <button onClick={handleConnectWallet} className="connect-button">
-              <KeyIcon style={{ marginRight: "8px" }} />
+              <KeyIcon style={{ marginRight: '8px' }} />
               Connect and Sync Your Wallets
             </button>
+
+             {/* Wallet input and Add button inside the same container */}
+            <div className="wallet-input-container">
+              <input
+                type="text"
+                className="wallet-input"
+                value={manualAddress}
+                placeholder="Enter Wallet Address..."
+                onChange={handleManualInput}
+              />
+              <button onClick={addManualAddress} className="add-button">
+                <PlusIcon style={{ marginRight: '8px' }} />
+                Add
+              </button>
+            </div>
           </div>
-          <div className="wallet-input-container">
-            <input
-              type="text"
-              className="wallet-input"
-              value={manualAddress}
-              placeholder="Enter Wallet Address . . ."
-              onChange={handleManualInput}
-            />
-            <button onClick={addManualAddress} className="add-button">
-              <PlusIcon style={{ marginRight: "8px" }} />
-              Add
-            </button>
-          </div>
+  
+          {/* Filters */}
           <div className="filter-buttons">
             <button
-              className={`filter-button ${activeCategory === "ALL" ? "active" : ""}`}
-              onClick={() => handleFilterClick("ALL")}
+              className={`filter-button ${activeCategory === 'ALL' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('ALL')}
             >
               ALL
             </button>
             <button
-              className={`filter-button ${activeCategory === "PLANNING" ? "active" : ""}`}
-              onClick={() => handleFilterClick("PLANNING")}
+              className={`filter-button ${activeCategory === 'PLANNING' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('PLANNING')}
             >
               Planning
             </button>
             <button
-              className={`filter-button ${activeCategory === "METRICS" ? "active" : ""}`}
-              onClick={() => handleFilterClick("METRICS")}
+              className={`filter-button ${activeCategory === 'METRICS' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('METRICS')}
             >
               Metrics
             </button>
             <button
-              className={`filter-button ${activeCategory === "SECURITY" ? "active" : ""}`}
-              onClick={() => handleFilterClick("SECURITY")}
+              className={`filter-button ${activeCategory === 'SECURITY' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('SECURITY')}
             >
               Security
             </button>
             <button
-              className={`filter-button ${activeCategory === "CLIENT_SUPPORT" ? "active" : ""}`}
-              onClick={() => handleFilterClick("CLIENT_SUPPORT")}
+              className={`filter-button ${activeCategory === 'CLIENT_SUPPORT' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('CLIENT_SUPPORT')}
             >
               Client Support
             </button>
           </div>
         </div>
-
+  
+        {/* Active Tool Rendering */}
         {renderActiveTool()}
       </div>
 
@@ -418,6 +462,19 @@ const DashboardV3: React.FC = () => {
           height: 100vh;
           background-color: #f8f9fa;
           overflow: hidden;
+        }
+
+        .hamburger-button {
+          position: fixed;
+          top: 37px;
+          left: 23px;
+          z-index: 1002;
+          background-color: transparent;
+          border: none;
+          color: #333;
+          font-size: 24px;
+          cursor: pointer;
+          display: none;
         }
 
         .sidebar {
@@ -430,7 +487,12 @@ const DashboardV3: React.FC = () => {
           align-items: center;
           border-right: 1px solid #E0E0E0;
           overflow-y: auto;
+          z-index: 1001;
           transition: all 0.3s ease;
+        }
+
+        .sidebar.open {
+          left: 0;
         }
 
         .logo {
@@ -487,22 +549,6 @@ const DashboardV3: React.FC = () => {
         .sub-menu li:hover {
           color: #FF7E2F;
           background-color: #f2f2f2;
-        }
-
-        .upgrade-section {
-          margin-top: auto;
-          text-align: center;
-        }
-
-        .upgrade-button {
-          background-color: #FF7E2F;
-          color: white;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          margin-bottom: 10px;
         }
 
         .main-content {
@@ -593,13 +639,12 @@ const DashboardV3: React.FC = () => {
         .wallet-input-container {
           display: flex;
           gap: 10px;
-          flex: 1;
-          margin-top: 10px;
           width: 100%;
+          margin-top: 10px;
         }
 
         .wallet-input {
-          width: 100%;
+          flex: 3; /* 75% of the container width */
           padding: 10px;
           border: 1px solid #E0E0E0;
           border-radius: 8px;
@@ -607,15 +652,17 @@ const DashboardV3: React.FC = () => {
         }
 
         .add-button {
+          flex: 1; /* 25% of the container width */
           background-color: #007bff;
           color: white;
-          padding: 10px 20px;
+          padding: 10px;
           border: none;
           border-radius: 8px;
           cursor: pointer;
           font-size: 16px;
           display: flex;
           align-items: center;
+          justify-content: center;
         }
 
         .filter-buttons {
@@ -693,6 +740,43 @@ const DashboardV3: React.FC = () => {
           color: #FF7E2F;
         }
 
+        .notification-item {
+          display: flex;
+          align-items: center; 
+          justify-content: flex-start;
+          gap: 10px;
+          padding: 15px 20px;
+          font-size: 16px;
+          color: #757575;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: background-color 0.3s, color 0.3s;
+          position: relative;
+        }
+
+        .notification-item:hover {
+          color: #FF7E2F;
+          background-color: #f2f2f2;
+        }
+
+        .notification-count {
+          background-color: red;
+          color: white;
+          border-radius: 50%;
+          padding: 3px 7px;
+          font-size: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 20px;
+          height: 20px;
+          margin-left: 10px;
+        }
+
+        .alert-active {
+          color: red;
+        }
+
         .beta-notice {
           margin-top: 20px;
           padding: 10px;
@@ -727,42 +811,25 @@ const DashboardV3: React.FC = () => {
             grid-template-columns: 1fr;
           }
 
+          .hamburger-button {
+            display: block;
+          }
+
           .sidebar {
-            width: 100%;
-            padding: 10px;
+            width: 240px;
             position: fixed;
             top: 0;
+            bottom: 0;
+            left: -100%;
+            transition: left 0.3s ease;
+          }
+
+          .sidebar.open {
             left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-direction: row;
-            z-index: 1000;
-            border-right: none;
-            border-bottom: 1px solid #E0E0E0;
-            background-color: white;
-            transition: all 0.3s ease;
-          }
-
-          .nav-menu ul {
-            flex-direction: row;
-            justify-content: space-evenly;
-            flex-wrap: wrap; /* This allows items to wrap to the next line */
-            padding: 10px;
-            width: 100%;
-          }
-
-          .nav-menu li {
-            flex: 1 0 45%; /* Allow items to take 45% of the container width */
-            text-align: center;
-            padding: 10px 0;
-            font-size: 14px;
           }
 
           .main-content {
-            padding: 80px 10px 20px 10px;
-            margin-top: 300px;
+            padding: 20px 10px 20px 10px;
           }
 
           .wallet-management {
@@ -772,12 +839,12 @@ const DashboardV3: React.FC = () => {
 
         @media (max-width: 480px) {
           .nav-menu ul {
-            flex-wrap: wrap; /* Ensure items wrap on smaller devices */
-            justify-content: space-evenly; /* Evenly distribute space between items */
+            flex-wrap: wrap;
+            justify-content: space-evenly;
           }
 
           .nav-menu li {
-            flex: 1 0 100%; /* Each item will take full width */
+            flex: 1 0 100%;
             text-align: center;
             padding: 8px 0;
           }
@@ -809,12 +876,12 @@ const DashboardV3: React.FC = () => {
 
         @media (max-width: 360px) {
           .nav-menu ul {
-            flex-wrap: wrap; /* Ensure items wrap on smaller devices */
-            justify-content: space-evenly; /* Evenly distribute space between items */
+            flex-wrap: wrap;
+            justify-content: space-evenly;
           }
 
           .nav-menu li {
-            flex: 1 0 100%; /* Each item will take full width */
+            flex: 1 0 100%;
             text-align: center;
             padding: 8px 0;
           }
