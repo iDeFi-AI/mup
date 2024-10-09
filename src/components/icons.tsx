@@ -24,7 +24,8 @@ import {
   faBell,
   faInfoCircle,
   faChevronDown,
-  faChevronUp
+  faChevronUp,
+  faFileUpload
    // Added for Quantum Agents
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -130,5 +131,10 @@ export const ChevronDownIcon: React.FC<IconProps> = (props) => (
 
 export const ChevronUpIcon: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faChevronUp} {...props} />
+
+);
+
+export const FileUpload: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faFileUpload} {...props} />
 
 );

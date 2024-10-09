@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { checkMultipleAddresses, fetchTransactionSummary } from "@/utilities/apiUtils";
+import axios from "axios";
 
+// Define the base URL for the iDeFi API
+const IDEFI_API_BASE_URL = 'https://api.idefi.ai';
+const ETHERSCAN_API_BASE_URL = 'https://api.etherscan.io/api';
+const ETHERSCAN_API_KEY = 'QEX6DGCMDRPXRU89FKPUR4BG9AUMCR4FXD';
+
+// Define types for transaction data and summary
 type TransactionType = "Sent" | "Received";
 
 interface Transaction {
@@ -31,6 +37,61 @@ interface ScoreTxnsV2Props {
   transactions: Transaction[];
 }
 
+// Function to fetch transaction summary from the iDeFi API
+const fetchTransactionSummary = async (address: string): Promise<TransactionSummary> => {
+  try {
+    const response = await axios.get(`${IDEFI_API_BASE_URL}/api/transaction_summary`, {
+      params: { address },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching transaction summary:", error);
+    throw new Error("Failed to fetch transaction summary.");
+  }
+};
+
+// Function to check multiple addresses for flagged status from the iDeFi API
+const checkMultipleAddresses = async (addresses: string[]): Promise<CheckAddressResult[]> => {
+  try {
+    const response = await axios.post(`${IDEFI_API_BASE_URL}/api/check_multiple_addresses`, {
+      addresses,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error checking multiple addresses:", error);
+    throw new Error("Failed to check multiple addresses.");
+  }
+};
+
+// Function to fetch Etherscan data
+const fetchEtherscanData = async (address: string): Promise<Transaction[]> => {
+  const etherscanUrl = `${ETHERSCAN_API_BASE_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${ETHERSCAN_API_KEY}`;
+
+  try {
+    const response = await axios.get(etherscanUrl);
+    const ethData = response.data;
+
+    if (ethData.status === '1') {
+      return ethData.result.map((tx: any, index: number) => ({
+        id: tx.hash || index.toString(),
+        timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString(),
+        type: address.toLowerCase() === tx.from.toLowerCase() ? 'Sent' : 'Received',
+        cryptocurrency: 'ETH',
+        usdAmount: parseFloat(tx.value) / 1e18,
+        thirdPartyWallet: address.toLowerCase() === tx.from.toLowerCase() ? tx.to : tx.from,
+        flagged: false,
+        risk: 'None',
+      }));
+    } else {
+      console.error('Error fetching Etherscan data:', ethData.message);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching Etherscan data:', error);
+    throw new Error('Failed to fetch Etherscan data.');
+  }
+};
+
 const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [updatedTransactions, setUpdatedTransactions] = useState<Transaction[]>([]);
@@ -53,8 +114,6 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
           const checkResults = await checkMultipleAddresses(addresses);
 
           if (checkResults && Array.isArray(checkResults)) {
-            console.log("Multiple Addresses Check Results:", checkResults);
-
             // Determine the status based on the root, parent, and child addresses
             const primaryCheckResult = checkResults.find(
               (result: CheckAddressResult) =>
@@ -84,8 +143,6 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
               ),
             }));
             setUpdatedTransactions(newTransactions);
-          } else {
-            console.error("Check results are not in expected format:", checkResults);
           }
         } catch (error) {
           console.error("Error fetching summary data:", error);
@@ -149,9 +206,7 @@ const ScoreTxnsV2: React.FC<ScoreTxnsV2Props> = ({ transactions }) => {
 
   return (
     <div className="score-transactions w-full max-w-lg mx-auto my-4">
-      <h2 className="text-2xl font-bold mb-4 text-center">
-        Transaction History
-      </h2>
+      <h2 className="text-2xl font-bold mb-4 text-center">Transaction History</h2>
       {renderSummary()}
       <div className="overflow-x-auto">
         <table className="w-full bg-white rounded-lg shadow-md">

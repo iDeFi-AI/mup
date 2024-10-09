@@ -1,17 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import ScoreTxnsV2 from "@/components/layouts/ScoreTxnsV2";
 import CodeTerminal from "@/components/layouts/CodeTerminal";
-import {
-  checkFlaggedAddress,
-  fetchDataAndMetrics,
-  fetchEtherscanData,
-} from "@/utilities/apiUtils";
+import axios from "axios";
 import { connectWallet, syncWalletData } from "@/utilities/web3Utils";
-import { ShieldIcon } from "@/components/icons";
 import { generateInsights } from "@/utilities/dataUtils";
+import { ShieldIcon } from "@/components/icons";
+
+const IDEFI_API_BASE_URL = "https://api.idefi.ai";
+const ETHERSCAN_API_BASE_URL = "https://api.etherscan.io/api";
+const ETHERSCAN_API_KEY = "QEX6DGCMDRPXRU89FKPUR4BG9AUMCR4FXD"; // Replace with your actual API key
+
+// Define types for transaction data
+interface Transaction {
+  id: string;
+  timestamp: string;
+  type: "Sent" | "Received";
+  cryptocurrency: string;
+  usdAmount: number;
+  thirdPartyWallet: string;
+  flagged: boolean;
+  risk: "High" | "Medium" | "Low" | "None";
+}
 
 // Utility function to validate Ethereum address
 const isValidAddress = (address: string): boolean => {
@@ -19,17 +31,67 @@ const isValidAddress = (address: string): boolean => {
   return ethRegExp.test(address);
 };
 
+// Function to fetch flagged addresses from the backend
+const fetchFlaggedAddresses = async (): Promise<Set<string>> => {
+  try {
+    const response = await axios.get(`${IDEFI_API_BASE_URL}/api/get_flagged_addresses`);
+    const data = response.data;
+    return new Set(Object.keys(data.flagged_addresses));
+  } catch (error) {
+    console.error("Error fetching flagged addresses:", error);
+    return new Set();
+  }
+};
+
+// Function to fetch transaction data from Etherscan
+const fetchEtherscanData = async (address: string): Promise<Transaction[]> => {
+  const etherscanUrl = `${ETHERSCAN_API_BASE_URL}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=asc&apikey=${ETHERSCAN_API_KEY}`;
+  try {
+    const response = await axios.get(etherscanUrl);
+    const ethData = response.data;
+
+    if (ethData.status === "1") {
+      return ethData.result.map((tx: any, index: number) => ({
+        id: tx.hash || index.toString(),
+        timestamp: new Date(parseInt(tx.timeStamp) * 1000).toISOString(),
+        type: address.toLowerCase() === tx.from.toLowerCase() ? "Sent" : "Received",
+        cryptocurrency: "ETH",
+        usdAmount: parseFloat(tx.value) / 1e18,
+        thirdPartyWallet: address.toLowerCase() === tx.from.toLowerCase() ? tx.to : tx.from,
+        flagged: false,
+        risk: "None",
+      }));
+    } else {
+      console.error("Error fetching Etherscan data:", ethData.message);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching Etherscan data:", error);
+    throw new Error("Failed to fetch Etherscan data.");
+  }
+};
+
 const SecurityCheck: React.FC = () => {
   const [address, setAddress] = useState<string>("");
   const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
   const [status, setStatus] = useState<"Pass" | "Fail" | "Warning" | null>(null);
   const [metrics, setMetrics] = useState<Record<string, any>>({});
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [insights, setInsights] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
+  const [flaggedAddresses, setFlaggedAddresses] = useState<Set<string>>(new Set());
+
+  // Fetch flagged addresses once on component mount
+  useEffect(() => {
+    const loadFlaggedAddresses = async () => {
+      const flaggedSet = await fetchFlaggedAddresses();
+      setFlaggedAddresses(flaggedSet);
+    };
+    loadFlaggedAddresses();
+  }, []);
 
   const handleCheckStatus = async () => {
     if (!isValidAddress(address)) {
@@ -41,12 +103,18 @@ const SecurityCheck: React.FC = () => {
     setAlertMessage(null);
 
     try {
-      const flaggedResponse = await checkFlaggedAddress(address);
+      // Check if the address is flagged
+      const flaggedResponse = await axios.get(`${IDEFI_API_BASE_URL}/api/checkaddress`, {
+        params: { address },
+      });
+      const flaggedStatus = flaggedResponse?.data?.status;
+
+      // Fetch transaction history from Etherscan
       const transactionHistory = await fetchEtherscanData(address);
 
-      if (flaggedResponse?.status) {
-        setStatus(flaggedResponse.status); // PASS, FAIL, or WARNING from backend
-        setMetrics(flaggedResponse.metrics || {}); // If there are any additional metrics
+      if (flaggedStatus) {
+        setStatus(flaggedStatus); // PASS, FAIL, or WARNING from backend
+        setMetrics(flaggedResponse?.data?.metrics || {});
         setTransactions(transactionHistory);
       } else {
         setAlertMessage("No relevant data found. Address is considered safe.");
@@ -108,7 +176,7 @@ const SecurityCheck: React.FC = () => {
     <div className="min-h-screen bg-background-color flex flex-col items-center text-center p-6">
       <div className="w-full max-w-lg bg-white shadow-lg rounded-lg p-6 mb-8">
         <h2 className="text-3xl font-bold mb-6">Security Check</h2>
-      
+
         {/* Arch Image with input box */}
         <div className="relative mb-4">
           <Image src="/arch-image3.png" alt="Risk Status Arch" width={450} height={180} className="w-full max-w-xs md:max-w-md mx-auto" />
@@ -120,7 +188,7 @@ const SecurityCheck: React.FC = () => {
             </div>
           )}
         </div>
-        
+
         <input
           type="text"
           value={address}
@@ -158,7 +226,7 @@ const SecurityCheck: React.FC = () => {
         {alertMessage && <p className="text-green-500 mt-4">{alertMessage}</p>}
       </div>
 
-      <hr className="w-full border-t border-gray-300 my-6" /> {/* Add a separator */}
+      <hr className="w-full border-t border-gray-300 my-6" />
 
       <div className="w-full max-w-lg">
         <div className="flex justify-between items-center mb-4">
@@ -171,7 +239,7 @@ const SecurityCheck: React.FC = () => {
         </div>
 
         {showTransactions && <ScoreTxnsV2 transactions={transactions} />}
-        
+
         <div className="mt-4">
           <CodeTerminal>{insights || "No insights generated yet."}</CodeTerminal>
         </div>

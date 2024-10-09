@@ -311,16 +311,19 @@ export const assignEndpointsToAgent = async (agentName: string, endpoints: strin
   }
 };
 
-// Fetch agent status
-export const fetchAgentStatus = async (agentName: string) => {
+// Assign tasks to an agent
+export const assignTasksToAgent = async (agentType: string, agentName: string, tasks: any) => {
   try {
-    const response = await axios.get('/api/agents', {
-      params: { agentName, endpoint: 'status' },
+    const response = await axios.post('/api/agents', {
+      endpoint: 'assign_tasks',
+      agent_type: agentType,
+      agent_name: agentName,
+      tasks,
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching agent status:', error);
-    throw new Error('Failed to fetch agent status.');
+    console.error('Error assigning tasks to agent:', error);
+    throw new Error('Failed to assign tasks.');
   }
 };
 
@@ -334,5 +337,65 @@ export const fetchAgentsByCategory = async (category: string) => {
   } catch (error) {
     console.error('Error fetching agents by category:', error);
     throw new Error('Failed to fetch agents by category.');
+  }
+};
+
+// Sync agent data (file upload)
+export const syncAgentData = async (agentName: string, formData: FormData) => {
+  try {
+    const response = await axios.post('/api/agents_sync', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error syncing agent data:', error);
+    throw new Error('Failed to sync agent data.');
+  }
+};
+
+// Fetch agent tracking stats
+export const fetchAgentTracking = async () => {
+  try {
+    const response = await axios.get('/api/agents', {
+      params: {
+        endpoint: 'agents_tracking', // Move `endpoint` into `params`
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching agent tracking:', error);
+    throw new Error('Failed to fetch agent tracking.');
+  }
+};
+
+
+// Trigger an agent task manually (new function)
+export const triggerAgentTask = async (agentName: string) => {
+  try {
+    const response = await axios.post('/api/agents', {
+      endpoint: 'trigger_task',
+      agent_name: agentName,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error triggering agent task:', error);
+    throw new Error('Failed to trigger agent task.');
+  }
+};
+
+
+// Fetch agent status
+export const fetchAgentStatus = async (agentName: string | null = null) => {
+  try {
+    const params = agentName ? { agent_name: agentName, endpoint: 'agents_status' } : { endpoint: 'agents_status' };
+    const response = await axios.get('/api/agents', { params });
+
+    if (response.status === 200) {
+      return response.data;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching agent status:', error);
+    throw new Error('Failed to fetch agent status.');
   }
 };
