@@ -45,7 +45,11 @@ const AgentBoard: React.FC = () => {
   const fetchAgents = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${AGENTS_API_BASE_URL}/api/agents_status`); // Call to external API
+      const response = await axios.get(`${AGENTS_API_BASE_URL}/api/agents_status`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       setAgents(response.data);
       setLoading(false);
     } catch (error) {
@@ -57,7 +61,11 @@ const AgentBoard: React.FC = () => {
   // Fetch agent generation tracking (counts for roles and total agents)
   const fetchAgentStats = async () => {
     try {
-      const response = await axios.get(`${AGENTS_API_BASE_URL}/api/agents_tracking`); // Call to external API
+      const response = await axios.get(`${AGENTS_API_BASE_URL}/api/agents_tracking`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       setAgentStats(response.data);
     } catch (error) {
       console.error('Error fetching agent tracking stats:', error);
@@ -67,7 +75,11 @@ const AgentBoard: React.FC = () => {
   // Function to trigger an agent task manually using axios
   const triggerAgentTask = async (agentName: string) => {
     try {
-      const response = await axios.post(`${AGENTS_API_BASE_URL}/api/agents`, { agent_name: agentName }); // Call directly to external API
+      const response = await axios.post(`${AGENTS_API_BASE_URL}/api/agents`, { agent_name: agentName }, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       alert(`Task triggered for ${agentName}`);
       fetchAgents(); // Fetch updated agent status after triggering
     } catch (error) {

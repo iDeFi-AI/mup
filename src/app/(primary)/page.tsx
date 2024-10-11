@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, signOut } from 'firebase/auth'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBell, faSignOutAlt, faBars, faTimes } from '@fortawesome/free-solid-svg-icons'; // Added faBars and faTimes for mobile sidebar
+import { faBell, faSignOutAlt, faBars, faTimes, faCog } from '@fortawesome/free-solid-svg-icons'; // Added faBars and faTimes for mobile sidebar
 import Image from 'next/image';
 import {
   connectWallet,
@@ -10,6 +10,7 @@ import {
   syncWalletData,
 } from '@/utilities/web3Utils';
 import WalletSelectionModal from '@/components/wallets';
+import AgentManagementModal from '@/components/agents';
 import {
   ShieldIcon,
   GraphIcon,
@@ -39,6 +40,7 @@ import AgentBoard from './agents/agent-board';
 import AgentManager from './agents/agent-manager';
 import Notifications from './alerts/notifications';
 import DataUpload from '@/components/data-upload';
+import SourceDestination from './security/source-destination';
 
 // Simulate fetching alerts from an API or database
 const getAlerts = async () => {
@@ -54,23 +56,24 @@ const tools = [
   { id: 2, name: 'FinancialRoadmap', label: 'Financial Roadmap', icon: GraphIcon, active: true },
   { id: 3, name: 'InvestmentSimulator', label: 'Investment Simulator', icon: MoneyIcon, active: true },
   { id: 4, name: 'VisualizeWallet', label: 'Visualize Wallet', icon: BalanceIcon, active: true },
+  { id: 5, name: 'SourceDestination', label: 'Security Check V2', icon: ShieldIcon, active: true },
 ];
 
 const sideMenuTools = [
-  { id: 5, name: 'CreateAgent', label: 'Create Agent', icon: Robot, active: true },
-  { id: 6, name: 'AgentBoard', label: 'Agent Board', icon: Robot, active: true },
-  { id: 7, name: 'AgentManager', label: 'Agent Manager', icon: Robot, active: true },
-  { id: 8, name: 'DataUpload', label: 'Dataset', icon: FileUpload, active: true }, // New Dataset Upload Tool
-  { id: 9, name: 'ShareDashboardModal', label: 'Share with Client', icon: ContractIcon, active: true },
-  { id: 10, name: 'UpgradePlanModal', label: 'Upgrade Plan', icon: LightningIcon, active: true },
-  { id: 11, name: 'Notifications', label: 'Notifications', icon: faBell, active: true },
+  { id: 6, name: 'CreateAgent', label: 'Create Agent', icon: Robot, active: true },
+  { id: 7, name: 'AgentBoard', label: 'Agent Board', icon: Robot, active: true },
+  { id: 8, name: 'AgentManager', label: 'Agent Manager', icon: Robot, active: true },
+  { id: 9, name: 'DataUpload', label: 'Dataset', icon: FileUpload, active: true }, // New Dataset Upload Tool
+  { id: 10, name: 'ShareDashboardModal', label: 'Share with Client', icon: ContractIcon, active: true },
+  { id: 11, name: 'UpgradePlanModal', label: 'Upgrade Plan', icon: LightningIcon, active: true },
+  { id: 12, name: 'Notifications', label: 'Notifications', icon: faBell, active: true },
 ];
 
 const categories = {
   ALL: tools.map((tool) => tool.name),
   PLANNING: ['FinancialRoadmap', 'InvestmentSimulator'],
   METRICS: ['VisualizeWallet'],
-  SECURITY: ['SecurityCheck'],
+  SECURITY: ['SecurityCheck', 'SourceDestination'],
   CLIENT_SUPPORT: ['ShareDashboardModal'],
 };
 
@@ -92,6 +95,7 @@ const DashboardV3: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Added state for sidebar toggle
   const [uploadedData, setUploadedData] = useState<any[]>([]);
+  const [showAgentManagementModal, setShowAgentManagementModal] = useState(false);
 
   useEffect(() => {
     if (connectedAccounts.length > 0) {
@@ -107,6 +111,34 @@ const DashboardV3: React.FC = () => {
 
     fetchAlerts();
   }, []);
+
+    // Toggle agent management modal
+    const toggleAgentManagementModal = () => {
+      setShowAgentManagementModal(!showAgentManagementModal);
+    };
+  
+    // Handler for minting a new agent
+    const handleMintNewAgent = async (agentRole: string) => {
+      try {
+        const response = await fetch('/api/mint-agent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ agentRole }),
+        });
+        const result = await response.json();
+    
+        if (result.error) {
+          alert(`Error minting agent: ${result.error}`);
+        } else {
+          alert(`Agent successfully minted! Image URL: ${result.image_url}`);
+        }
+      } catch (error) {
+        console.error('Error minting agent:', error);
+        alert('There was an error minting the agent. Please try again.');
+      }
+    };
 
   const handleConnectWallet = () => {
     setShowWalletModal(true);
@@ -227,6 +259,8 @@ const DashboardV3: React.FC = () => {
           return <InvestmentSimulator />;
         case 'VisualizeWallet':
           return <VisualizeWallet />;
+        case 'SourceDestination':
+          return <SourceDestination />;
         default:
           return renderToolGrid();
       }
@@ -288,15 +322,24 @@ const DashboardV3: React.FC = () => {
       {showWalletModal && (
         <WalletSelectionModal onSelect={handleWalletSelect} onClose={() => setShowWalletModal(false)} />
       )}
-  
+      
+      {showAgentManagementModal && (
+        <AgentManagementModal onClose={toggleAgentManagementModal} onMint={handleMintNewAgent} />
+      )}
+      
       <button className="hamburger-button" onClick={toggleSidebar}>
         <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
       </button>
 
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="logo">
-          <Image src="/agent.png" alt="iDEFi.AI Logo" width={100} height={50} className="logo-image" />
+      <div className="logo">
+        <div className="profile-container">
+          <button className="gear-icon" onClick={toggleAgentManagementModal}>
+            <FontAwesomeIcon icon={faCog} />
+          </button>
+          <Image src="/agent.png" alt="iDEFi.AI Logo" width={100} height={100} className="profile-image" />
         </div>
+      </div>
         <nav className="nav-menu">
           <ul>
             <li className={activeTool === null ? 'active' : ''} onClick={() => setActiveTool(null)}>
@@ -483,6 +526,35 @@ const DashboardV3: React.FC = () => {
           overflow: hidden;
         }
 
+        .profile-container {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .gear-icon {
+          position: absolute;
+          top: -10px; /* Moves it slightly above the profile image */
+          right: -10px; /* Aligns the icon to the right of the profile image */
+          background-color: white;
+          border: 2px solid #e0e0e0;
+          border-radius: 50%;
+          padding: 5px;
+          font-size: 18px;
+          color: #333;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          transition: background-color 0.3s, transform 0.3s;
+        }
+        
+         .gear-icon:hover {
+          color: #ff7e2f;
+          transform: scale(1.1); /* Slightly enlarges the icon on hover for visual feedback */
+
+        }
+
         .hamburger-button {
           position: fixed;
           top: 37px;
@@ -506,7 +578,7 @@ const DashboardV3: React.FC = () => {
           align-items: center;
           border-right: 1px solid #E0E0E0;
           overflow-y: auto;
-          z-index: 1001;
+          z-index: 1000;
           transition: all 0.3s ease;
         }
 
