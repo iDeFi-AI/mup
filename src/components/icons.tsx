@@ -25,7 +25,13 @@ import {
   faInfoCircle,
   faChevronDown,
   faChevronUp,
-  faFileUpload
+  faFileUpload,
+  faFileMedical,
+  faHammer,
+  faHelmetSafety,
+  faMagnifyingGlassChart,
+  faListCheck,
+  faEye
    // Added for Quantum Agents
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -136,5 +142,35 @@ export const ChevronUpIcon: React.FC<IconProps> = (props) => (
 
 export const FileUpload: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faFileUpload} {...props} />
+
+);
+
+export const Heal: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faFileMedical} {...props} />
+
+);
+
+export const Build: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faHammer} {...props} />
+
+);
+
+export const Scout: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faMagnifyingGlassChart} {...props} />
+
+);
+
+export const Mine: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faHelmetSafety} {...props} />
+
+);
+
+export const CheckList: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faListCheck} {...props} />
+
+);
+
+export const Eye: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faEye} {...props} />
 
 );

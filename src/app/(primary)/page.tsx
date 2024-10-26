@@ -27,7 +27,13 @@ import {
   ContractIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  FileUpload
+  FileUpload,
+  Heal,
+  Build,
+  Scout,
+  Mine,
+  CheckList,
+  Eye
 } from '@/components/icons';
 import SecurityCheck from './security/security-check';
 import FinancialRoadmap from './planning/financial-roadmap';
@@ -41,6 +47,7 @@ import AgentManager from './agents/agent-manager';
 import Notifications from './alerts/notifications';
 import DataUpload from '@/components/data-upload';
 import SourceDestination from './security/source-destination';
+import AIChat from '@/components/AIChat';
 
 // Simulate fetching alerts from an API or database
 const getAlerts = async () => {
@@ -71,10 +78,11 @@ const sideMenuTools = [
 
 const categories = {
   ALL: tools.map((tool) => tool.name),
-  PLANNING: ['FinancialRoadmap', 'InvestmentSimulator'],
-  METRICS: ['VisualizeWallet'],
-  SECURITY: ['SecurityCheck', 'SourceDestination'],
-  CLIENT_SUPPORT: ['ShareDashboardModal'],
+  MINE: ['FinancialRoadmap', 'InvestmentSimulator'],
+  BUILD: ['VisualizeWallet'],
+  DEFEND: ['SecurityCheck', 'SourceDestination'],
+  SCOUT: ['ShareDashboardModal'],
+  HEAL: ['ShareDashboardModal'],
 };
 
 const DashboardV3: React.FC = () => {
@@ -334,10 +342,9 @@ const DashboardV3: React.FC = () => {
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
       <div className="logo">
         <div className="profile-container">
-          <button className="gear-icon" onClick={toggleAgentManagementModal}>
-            <FontAwesomeIcon icon={faCog} />
-          </button>
-          <Image src="/agent.png" alt="iDEFi.AI Logo" width={100} height={100} className="profile-image" />
+        <div className="spline-container">
+            <AIChat />
+          </div>
         </div>
       </div>
         <nav className="nav-menu">
@@ -378,15 +385,18 @@ const DashboardV3: React.FC = () => {
             </li>
             {createAgentDropdownOpen && (
               <ul className="sub-menu">
-                <li onClick={() => handleToolClick('CreateAgent')}>Create New Agent</li>
-                <li onClick={() => handleToolClick('AgentBoard')}>Agent Board</li>
-                <li onClick={() => handleToolClick('AgentManager')}>Agent Manager</li>
+                <li onClick={() => handleToolClick('CreateAgent')}>
+                  <PlusIcon />Create</li>
                 <li onClick={() => handleToolClick('DataUpload')}>
-                <FileUpload />Datasets</li>
+                  <FileUpload />Upload</li>
+                <li onClick={() => handleToolClick('AgentBoard')}>
+                  <Eye />Monitor </li>
+                <li onClick={() => handleToolClick('AgentManager')}>
+                  <CheckList />Manage</li>
                  {/* Notifications Bell */}
                 <li className="notification-item" onClick={handleNotificationClick}>
                   <FontAwesomeIcon icon={faBell} className={activeAlerts.length > 0 ? 'alert-active' : ''} />
-                  <span>Notifications</span>
+                  <span>Alerts</span>
                   {activeAlerts.length > 0 && <span className="notification-count">{activeAlerts.length}</span>}
                 </li>
               </ul>
@@ -484,32 +494,38 @@ const DashboardV3: React.FC = () => {
             <button
               className={`filter-button ${activeCategory === 'ALL' ? 'active' : ''}`}
               onClick={() => handleFilterClick('ALL')}
-            >
+            > <StarIcon style={{ marginRight: '8px' }} />
               ALL
             </button>
             <button
-              className={`filter-button ${activeCategory === 'PLANNING' ? 'active' : ''}`}
-              onClick={() => handleFilterClick('PLANNING')}
-            >
-              Planning
+              className={`filter-button ${activeCategory === 'MINE' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('MINE')}
+            > <Mine style={{ marginRight: '8px' }} />
+              Mine
             </button>
             <button
-              className={`filter-button ${activeCategory === 'METRICS' ? 'active' : ''}`}
-              onClick={() => handleFilterClick('METRICS')}
-            >
-              Metrics
+              className={`filter-button ${activeCategory === 'BUILD' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('BUILD')}
+            > <Build style={{ marginRight: '8px' }} />
+              Build
             </button>
             <button
-              className={`filter-button ${activeCategory === 'SECURITY' ? 'active' : ''}`}
-              onClick={() => handleFilterClick('SECURITY')}
-            >
-              Security
+              className={`filter-button ${activeCategory === 'DEFEND' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('DEFEND')}
+            > <ShieldIcon style={{ marginRight: '8px' }} />
+              Defend
             </button>
             <button
-              className={`filter-button ${activeCategory === 'CLIENT_SUPPORT' ? 'active' : ''}`}
-              onClick={() => handleFilterClick('CLIENT_SUPPORT')}
-            >
-              Client Support
+              className={`filter-button ${activeCategory === 'SCOUT' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('SCOUT')}
+            > <Scout style={{ marginRight: '8px' }} />
+              Scout
+            </button>
+            <button
+              className={`filter-button ${activeCategory === 'HEAL' ? 'active' : ''}`}
+              onClick={() => handleFilterClick('HEAL')}
+            > <Heal style={{ marginRight: '8px' }} />
+              Heal
             </button>
           </div>
         </div>
@@ -569,7 +585,7 @@ const DashboardV3: React.FC = () => {
         }
 
         .sidebar {
-          width: 240px;
+          width: 250px;
           background-color: white;
           padding: 20px;
           display: flex;
@@ -584,10 +600,6 @@ const DashboardV3: React.FC = () => {
 
         .sidebar.open {
           left: 0;
-        }
-
-        .logo {
-          margin-bottom: 30px;
         }
 
         .logo-image {
