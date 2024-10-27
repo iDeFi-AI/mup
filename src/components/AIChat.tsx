@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMicrophone, faPaperPlane, faPencilAlt, faCog } from '@fortawesome/free-solid-svg-icons'; // Added faCog for the gear icon
-import { generateInsights } from '@/utilities/dataUtils'; // Assuming this function exists in dataUtils
 import AgentManagementModal from '@/components/agents'; // Import the Agent modal component
 
 const AIChat: React.FC = () => {
   const [Spline, setSpline] = useState<any>(null);
   const [input, setInput] = useState<string>(''); // User prompt input
-  const [insights, setInsights] = useState<string | null>(null); // Store AI-generated insights
   const [listening, setListening] = useState<boolean>(false); // Voice recognition state
   const [showModal, setShowModal] = useState<boolean>(false); // Modal control
   const [modalType, setModalType] = useState<'voice' | 'text' | null>(null); // Modal type to handle text/voice input
@@ -54,14 +52,13 @@ const AIChat: React.FC = () => {
     };
   };
 
-  // Handle fetching insights based on the prompt input
+  // Handle submitting the prompt input
   const handleSubmit = async (prompt?: string) => {
     const userPrompt = prompt || input;
     if (!userPrompt) return;
 
-    // Generate insights based on the user prompt (simulating address syncing here)
-    const generatedInsights = await generateInsights(userPrompt, [], 'PASS'); // Adjusted to remove address requirement
-    setInsights(generatedInsights);
+    // For now, just log the prompt or handle it differently as per your needs
+    console.log('Submitted Prompt:', userPrompt);
   };
 
   // Open modal for voice or text input
@@ -167,9 +164,6 @@ const AIChat: React.FC = () => {
           <div>Loading...</div>
         )}
       </div>
-
-      {/* Show AI-generated insights */}
-      {insights && <div style={styles.insightsSection}>{insights}</div>}
     </div>
   );
 };
@@ -278,12 +272,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: '10px 20px',
     borderRadius: '5px',
     cursor: 'pointer',
-  },
-  insightsSection: {
-    backgroundColor: '#f9f9f9',
-    padding: '20px',
-    borderRadius: '10px',
-    marginBottom: '20px',
   },
 };
 
