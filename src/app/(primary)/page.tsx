@@ -550,6 +550,10 @@ const DashboardV3: React.FC = () => {
           margin-bottom: 20px;
         }
 
+        .spline-container {
+          z-index: 1003; /* Set a higher z-index than the sidebar */
+        }
+
         .gear-icon {
           position: absolute;
           top: -10px; /* Moves it slightly above the profile image */

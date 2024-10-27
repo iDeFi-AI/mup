@@ -11,7 +11,7 @@ import {
   isValidAddress,
 } from "@/utilities/apiUtils";
 import { connectWallet, syncWalletData } from "@/utilities/web3Utils"; // Wallet functions from wallets.tsx
-import { generateInsights } from "@/utilities/dataUtils";
+import { generateInsights } from "@/utilities/aiUtils";
 import WalletSelectionModal from "@/components/wallets"; // Modal for wallet selection
 
 interface Metric {

@@ -6,7 +6,7 @@ import ScoreTxnsV2 from "@/components/layouts/ScoreTxnsV2";
 import CodeTerminal from "@/components/layouts/CodeTerminal";
 import axios from "axios";
 import { connectWallet, syncWalletData } from "@/utilities/web3Utils";
-import { generateInsights } from "@/utilities/dataUtils";
+import { generateInsights } from "@/utilities/aiUtils";
 import { ShieldIcon } from "@/components/icons";
 
 const IDEFI_API_BASE_URL = "https://api.idefi.ai";
