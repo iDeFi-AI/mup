@@ -18,27 +18,21 @@ const AIChat: React.FC = () => {
 
   // Voice recognition setup
   const SpeechRecognition =
-    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    typeof window !== 'undefined' &&
+    ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
   useEffect(() => {
-    (async () => {
-      try {
-        const SplineModule = await import('@splinetool/react-spline');
-        setSpline(() => SplineModule.default);
-      } catch (error) {
-        console.error('Error loading Spline:', error);
-      }
-    })();
-    
-    // Remove Spline watermark once loaded
-    window.onload = function () {
-      const shadowRoot = document.querySelector('spline-viewer')?.shadowRoot;
-      if (shadowRoot) {
-        const logo = shadowRoot.querySelector('#logo');
-        if (logo) logo.remove(); // Remove the watermark logo
-      }
-    };
+    if (typeof window !== 'undefined') {
+      (async () => {
+        try {
+          const SplineModule = await import('@splinetool/react-spline');
+          setSpline(() => SplineModule.default);
+        } catch (error) {
+          console.error('Error loading Spline:', error);
+        }
+      })();
+    }
   }, []);
 
   const startListening = () => {
@@ -84,7 +78,9 @@ const AIChat: React.FC = () => {
 
   // Show preloaded prompt on component mount
   useEffect(() => {
-    handleSubmit(preloadedPrompt); // Automatically trigger AI with preloaded prompt
+    if (typeof window !== 'undefined') {
+      handleSubmit(preloadedPrompt); // Automatically trigger AI with preloaded prompt
+    }
   }, []);
 
   // Open agent modal when gear is clicked

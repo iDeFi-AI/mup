@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { createJWT } from 'did-jwt'; // For creating JWT with DID
-import { EthrDID } from 'ethr-did'; // For Ethereum-based DIDs
 import { connectWallet, disconnectWallet, signMessage } from '@/utilities/web3Utils'; // Web3 utilities
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWallet, faIdCard, faSignOutAlt, faKey, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
@@ -12,6 +10,23 @@ const DidManagementPage: React.FC = () => {
   const [did, setDid] = useState<string | null>(null);
   const [jwt, setJwt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Dynamically load did-jwt and ethr-did when needed
+  let EthrDID: any;
+  let createJWT: any;
+
+  useEffect(() => {
+    const loadLibraries = async () => {
+      try {
+        EthrDID = (await import('ethr-did')).EthrDID;
+        createJWT = (await import('did-jwt')).createJWT;
+      } catch (err) {
+        setError('Failed to load DID libraries');
+      }
+    };
+
+    loadLibraries();
+  }, []);
 
   // Connect wallet on component load
   useEffect(() => {
