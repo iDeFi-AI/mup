@@ -225,7 +225,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 1004;
+          z-index: 2000;
         }
 
         .modalContent {
