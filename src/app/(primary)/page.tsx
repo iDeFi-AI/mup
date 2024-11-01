@@ -10,7 +10,6 @@ import {
   syncWalletData,
 } from '@/utilities/web3Utils';
 import WalletSelectionModal from '@/components/wallets';
-import AgentManagementModal from '@/components/agents';
 import {
   ShieldIcon,
   GraphIcon,
@@ -47,7 +46,7 @@ import AgentManager from './agents/agent-manager';
 import Notifications from './alerts/notifications';
 import DataUpload from '@/components/data-upload';
 import SourceDestination from './security/source-destination';
-import AIChat from '@/components/AIChat';
+import AIProfile from '@/components/AIProfile';
 
 // Simulate fetching alerts from an API or database
 const getAlerts = async () => {
@@ -85,6 +84,20 @@ const categories = {
   HEAL: ['ShareDashboardModal'],
 };
 
+// Sample agent data
+const agents = [
+  {
+    name: 'iNFA #001',
+    imageUrl: '/iNFA1.png',
+    traits: { Mining: 75, Building: 60, Defending: 45, Scouting: 85, Healing: 55 },
+  },
+  {
+    name: 'iNFA #002',
+    imageUrl: '/iNFA2.png',
+    traits: { Mining: 65, Building: 75, Defending: 60, Scouting: 50, Healing: 70 },
+  },
+];
+
 const DashboardV3: React.FC = () => {
   const [connectedAccounts, setConnectedAccounts] = useState<{ account: string; provider: string }[]>([]);
   const [manualAddress, setManualAddress] = useState<string>('');
@@ -104,6 +117,8 @@ const DashboardV3: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // Added state for sidebar toggle
   const [uploadedData, setUploadedData] = useState<any[]>([]);
   const [showAgentManagementModal, setShowAgentManagementModal] = useState(false);
+  const [selectedAgentIndex, setSelectedAgentIndex] = useState<number>(0); // Track selected agent
+  const selectedAgent = agents[selectedAgentIndex]; // Get the currently selected agent
 
   useEffect(() => {
     if (connectedAccounts.length > 0) {
@@ -330,11 +345,6 @@ const DashboardV3: React.FC = () => {
       {showWalletModal && (
         <WalletSelectionModal onSelect={handleWalletSelect} onClose={() => setShowWalletModal(false)} />
       )}
-      
-      {showAgentManagementModal && (
-        <AgentManagementModal onClose={toggleAgentManagementModal} onMint={handleMintNewAgent} />
-      )}
-      
       <button className="hamburger-button" onClick={toggleSidebar}>
         <FontAwesomeIcon icon={isSidebarOpen ? faTimes : faBars} />
       </button>
@@ -343,8 +353,8 @@ const DashboardV3: React.FC = () => {
       <div className="logo">
         <div className="profile-container">
         <div className="spline-container">
-            <AIChat />
-          </div>
+        <AIProfile selectedAgent={selectedAgentIndex} onAgentChange={setSelectedAgentIndex} />
+        </div>
         </div>
       </div>
         <nav className="nav-menu">
@@ -429,66 +439,108 @@ const DashboardV3: React.FC = () => {
   
       <div className="main-content bg-background-color">
         <div className="header">
-          {/* Wallet management section */}
-          <div className="wallet-management">
-            <div className="wallet-summary" onClick={toggleDropdown}>
-              <span>{mainAccount ? shortenAddress(mainAccount) : 'No Wallet Connected'}</span>
-              <span>{showDropdown ? '▲' : '▼'}</span>
-            </div>
-            {showDropdown && (
-              <div className="wallet-dropdown">
-                {connectedAccounts.map(({ account, provider }, index) => (
-                  <div key={index} className="wallet-info" onClick={() => setMainAccount(account)}>
-                    <Image
-                      src={
-                        provider === 'MetaMask'
-                          ? '/metamask-logo.png'
-                          : provider === 'Coinbase'
-                          ? '/coinbase-logo.png'
-                          : '/mainlogo.png' // Replace with your default logo for manual entries
-}                     alt="Wallet Logo"
-                      width={24}
-                      height={24}
-                      className="wallet-logo"
-                      priority
-                      quality={100}
-                      layout="fixed"
-                    />
-                    <span className="wallet-address" title={account}>
-                      {shortenAddress(account)}
-                    </span>
-                    <button onClick={() => copyToClipboard(account)} className="copy-button">
-                      <CopyIcon />
-                    </button>
-                    <button onClick={() => handleDisconnectWallet(account)} className="disconnect-button">
-                      Disconnect
-                    </button>
-                  </div>
-                ))}
+          <div className="agent-wallet-container">
+            {/* Agent Display Section */}
+            <div className="agent-display">
+              {/* Agent Select Dropdown */}
+              <div className="agent-select">
+                <label htmlFor="agentDropdown">Select Agent:</label>
+                <select
+                  id="agentDropdown"
+                  value={selectedAgentIndex}
+                  onChange={(e) => setSelectedAgentIndex(Number(e.target.value))}
+                  className="agent-dropdown"
+                  >
+                  {agents.map((agent, index) => (
+                    <option key={index} value={index}>
+                      {agent.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            <button onClick={handleConnectWallet} className="connect-button">
-              <KeyIcon style={{ marginRight: '8px' }} />
-              Connect and Sync Your Wallets
-            </button>
-
-             {/* Wallet input and Add button inside the same container */}
-            <div className="wallet-input-container">
-              <input
-                type="text"
-                className="wallet-input"
-                value={manualAddress}
-                placeholder="Enter Wallet Address..."
-                onChange={handleManualInput}
-              />
-              <button onClick={addManualAddress} className="add-button">
-                <PlusIcon style={{ marginRight: '8px' }} />
-                Add
+              {/* Agent Card */}
+              <div className="agent-card">
+                <img src={selectedAgent.imageUrl} alt={selectedAgent.name} className="agent-image" />
+                <div className="agent-info">
+                  <div className="traits">
+                    {Object.entries(selectedAgent.traits).map(([trait, level]) => (
+                      <div key={trait} className="trait">
+                        <span className="trait-icon">{getTraitIcon(trait)}</span>
+                        <span className="trait-name">{trait}</span>
+                        <div className="progress-bar">
+                          <div
+                            className="progress"
+                            style={{ width: `${level}%`, backgroundColor: getTraitColor(trait) }}
+                          >
+                            {level}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Wallet Management Section */}
+            <div className="wallet-management">
+              <h2>Wallet Management</h2>
+              <div className="wallet-summary" onClick={toggleDropdown}>
+                <span>{mainAccount ? shortenAddress(mainAccount) : 'No Wallet Connected'}</span>
+                <span>{showDropdown ? '▲' : '▼'}</span>
+              </div>
+              {showDropdown && (
+                <div className="wallet-dropdown">
+                  {connectedAccounts.map(({ account, provider }, index) => (
+                    <div key={index} className="wallet-info" onClick={() => setMainAccount(account)}>
+                      <Image
+                        src={
+                          provider === 'MetaMask'
+                            ? '/metamask-logo.png'
+                            : provider === 'Coinbase'
+                            ? '/coinbase-logo.png'
+                            : '/mainlogo.png'
+                        }
+                        alt="Wallet Logo"
+                        width={24}
+                        height={24}
+                        className="wallet-logo"
+                        priority
+                        quality={100}
+                        layout="fixed"
+                      />
+                      <span className="wallet-address" title={account}>
+                        {shortenAddress(account)}
+                      </span>
+                      <button onClick={() => copyToClipboard(account)} className="copy-button">
+                        <CopyIcon />
+                      </button>
+                      <button onClick={() => handleDisconnectWallet(account)} className="disconnect-button">
+                        Disconnect
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button onClick={handleConnectWallet} className="connect-button">
+                <KeyIcon style={{ marginRight: '8px' }} />
+                Connect and Sync Your Wallets
               </button>
+              <div className="wallet-input-container">
+                <input
+                  type="text"
+                  className="wallet-input"
+                  value={manualAddress}
+                  placeholder="Enter Wallet Address..."
+                  onChange={handleManualInput}
+                />
+                <button onClick={addManualAddress} className="add-button">
+                  <PlusIcon style={{ marginRight: '8px' }} />
+                  Add
+                </button>
+              </div>
             </div>
           </div>
-  
           {/* Filters */}
           <div className="filter-buttons">
             <button
@@ -501,31 +553,31 @@ const DashboardV3: React.FC = () => {
               className={`filter-button ${activeCategory === 'MINE' ? 'active' : ''}`}
               onClick={() => handleFilterClick('MINE')}
             > <Mine style={{ marginRight: '8px' }} />
-              Mine
+              Mining
             </button>
             <button
               className={`filter-button ${activeCategory === 'BUILD' ? 'active' : ''}`}
               onClick={() => handleFilterClick('BUILD')}
             > <Build style={{ marginRight: '8px' }} />
-              Build
+              Building
             </button>
             <button
               className={`filter-button ${activeCategory === 'DEFEND' ? 'active' : ''}`}
               onClick={() => handleFilterClick('DEFEND')}
             > <ShieldIcon style={{ marginRight: '8px' }} />
-              Defend
+              Defending
             </button>
             <button
               className={`filter-button ${activeCategory === 'SCOUT' ? 'active' : ''}`}
               onClick={() => handleFilterClick('SCOUT')}
             > <Scout style={{ marginRight: '8px' }} />
-              Scout
+              Scouting
             </button>
             <button
               className={`filter-button ${activeCategory === 'HEAL' ? 'active' : ''}`}
               onClick={() => handleFilterClick('HEAL')}
             > <Heal style={{ marginRight: '8px' }} />
-              Heal
+              Healing
             </button>
           </div>
         </div>
@@ -673,12 +725,115 @@ const DashboardV3: React.FC = () => {
           margin-bottom: 30px;
         }
 
-        .wallet-management {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
+        .agent-select {
+          margin-right: 100px;
+        }
+
+        .agent-select label {
+          font-size: 1rem;
+          color: #000;
+          margin-bottom: 8px;
+          margin-right: 10px;
+        }
+
+        .agent-dropdown {
+          padding: 5px;
+          font-size: 1rem;
+          border-radius: 5px;
+          border: 1px solid #ccc;
+          background-color: #333;
+          color: #fff;
           width: 100%;
+          max-width: 200px;
+        }
+
+        .agent-wallet-container {
+          display: flex;
+          gap: 20px;
+          flex-wrap: wrap;
+          width: 100%;
+        }
+
+        .agent-display {
+          background-color: #ffffff;
+          padding: 20px;
+          border-radius: 12px;
+          flex: 1;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .agent-info h3 {
+          font-size: 1.1em;
+          font-weight: bold;
+          text-align: center;
+          margin: 0;
+          color: #333;
+        }
+
+        .trait {
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+
+        .trait-icon {
+          width: 24px;
+          font-size: 1.2em;
+          margin-right: 10px;
+        }
+
+        .trait-name {
+          font-weight: bold;
+          flex-shrink: 0;
+          margin-right: 10px;
+        }
+
+        .progress-bar {
+          flex: 1;
+          background-color: #000;
+          border-radius: 10px;
+          overflow: hidden;
+          height: 14px;
           max-width: 600px;
+          min-width: 400px;
+        }
+
+        .progress {
+          height: 100%;
+          color: white;
+          text-align: right;
+          padding-right: 5px;
+          border-radius: 5px;
+          font-size: 10px;
+        }
+
+        .wallet-management {
+          background-color: #ffffff;
+          padding: 20px;
+          border-radius: 12px;
+          flex: 1;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .agent-display h2,
+        .wallet-management h2 {
+          margin-bottom: 10px;
+        }
+
+        .agent-card {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          background-color: #ffffff;
+          border-radius: 12px;
+          padding: 20px;
+        }
+
+        .agent-image {
+          width: 100px;
+          height: 100px;
+          margin-left: 25px;
+          margin-right: 20px;
         }
 
         .wallet-summary {
@@ -695,11 +850,13 @@ const DashboardV3: React.FC = () => {
           display: flex;
           align-items: center;
           gap: 10px;
+          padding: 8px 0;
         }
 
         .wallet-address {
           font-size: 14px;
           color: #333;
+          flex: 1;
         }
 
         .copy-button,
@@ -710,7 +867,7 @@ const DashboardV3: React.FC = () => {
           border: none;
           border-radius: 8px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 12px;
         }
 
         .wallet-dropdown {
@@ -740,7 +897,9 @@ const DashboardV3: React.FC = () => {
           font-size: 16px;
           display: flex;
           align-items: center;
-          margin-top: 10px;
+          width: 100%;
+          justify-content: center;
+          margin-top: 20px;
         }
 
         .wallet-input-container {
@@ -748,6 +907,9 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
           width: 100%;
           margin-top: 10px;
+          padding: 20px 20px;
+          justify-content: center;
+          align-items: center;
         }
 
         .wallet-input {
@@ -770,6 +932,7 @@ const DashboardV3: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
+          margin-right: 30px;
         }
 
         .filter-buttons {
@@ -897,9 +1060,89 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1800px) {
+          .agent-image {
+            width: 100px;
+            height: 100px;
+            margin-left: 15px;
+            margin-right: 10px;
+          }
+
+         .progress-bar {
+            flex: 1;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
+            max-width: 200px;
+            min-width: 175px;
+          }
+          .progress {
+            height: 100%;
+            color: white;
+            text-align: right;
+            padding-right: 5px;
+            border-radius: 5px;
+            font-size: 10px;
+          }
+         }
+        
+        @media (max-width: 1400px) {
+          .agent-image {
+            width: 100px;
+            height: 100px;
+            margin-left: 15px;
+            margin-right: 10px;
+          }
+
+         .progress-bar {
+            flex: 1;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
+            max-width: 200px;
+            min-width: 175px;
+          }
+          .progress {
+            height: 100%;
+            color: white;
+            text-align: right;
+            padding-right: 5px;
+            border-radius: 5px;
+            font-size: 10px;
+          }
+         }
+
+        @media (max-width: 1300px) {
           .grid-container {
             grid-template-columns: repeat(3, 1fr);
+          }
+
+          .agent-image {
+            width: 100px;
+            height: 100px;
+            margin-left: 10px;
+            margin-right: 5px;
+          }
+
+          .progress-bar {
+            flex: 1;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
+            max-width: 150px;
+            min-width: 100px;
+          }
+
+          .progress {
+            height: 100%;
+            color: white;
+            text-align: right;
+            padding-right: 5px;
+            border-radius: 5px;
+            font-size: 10px;
           }
         }
 
@@ -911,7 +1154,222 @@ const DashboardV3: React.FC = () => {
           .sidebar {
             width: 200px;
           }
+          .agent-image {
+            width: 100px;
+            height: 100px;
+            margin-left: 5px;
+            margin-right: 2.5px;
+          }
+
+          .progress-bar {
+            flex: 1;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 14px;
+            max-width: 75px;
+            min-width: 50px;
+          }
+
+          .progress {
+            height: 100%;
+            color: white;
+            text-align: right;
+            padding-right: 5px;
+            border-radius: 5px;
+            font-size: 10px;
+          }
         }
+
+        @media (max-width: 975px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+          }
+
+          .hamburger-button {
+            display: block;
+          }
+
+          .sidebar {
+            width: 240px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: -100%;
+            transition: left 0.3s ease;
+          }
+
+          .sidebar.open {
+            left: 0;
+          }
+
+          .main-content {
+            padding: 20px 10px 20px 10px;
+          }
+
+          .agent-display,
+          .wallet-management {
+              max-width: 100%;
+            }
+
+          .wallet-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+          }
+
+          .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+         .wallet-address {
+            font-size: 14px;
+            color: #333;
+          }
+
+        .copy-button,
+        .disconnect-button {
+            background-color: #FF7E2F;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+          }
+
+        .wallet-dropdown {
+          margin-top: 10px;
+          padding: 10px;
+          background-color: white;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+          max-height: 200px;
+          overflow-y: auto;
+          width: 100%;
+        }
+
+        .connect-button,
+        .add-button {
+          background-color: #FF7E2F;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .wallet-input-container {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        .wallet-input {
+          flex: 3;
+          padding: 10px;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          font-size: 16px;
+        }
+
+        /* Agent Display Styles */
+        .agent-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+        .agent-image {
+          width: 100px;
+          height: 100px;
+        }
+
+        .agent-info h3 {
+          font-size: 1.1em;
+          font-weight: bold;
+          text-align: center;
+          margin: 0;
+          color: #333;
+        }
+
+        .traits {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .trait {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .progress-bar {
+          flex: 1;
+          background-color: #000;
+          border-radius: 10px;
+          overflow: hidden;
+          height: 15px;
+          margin-left: 15px;
+          width: 100px;
+        }
+
+        .progress {
+          height: 100%;
+          color: white;
+          text-align: right;
+          padding-right: 5px;
+          border-radius: 5px;
+          font-size: 10px;
+        }
+
+        /* Filter buttons */
+        .filter-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        .filter-button {
+          background-color: #F1F0EB;
+          color: #333;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.3s, color 0.3s;
+          flex: 1;
+        }
+
+        .filter-button.active,
+        .filter-button:hover {
+            background-color: #FF7E2F;
+            color: white;
+          }
+       }
 
         @media (max-width: 768px) {
           .grid-container {
@@ -939,8 +1397,167 @@ const DashboardV3: React.FC = () => {
             padding: 20px 10px 20px 10px;
           }
 
+          .agent-display,
           .wallet-management {
-            max-width: 100%;
+              max-width: 100%;
+            }
+
+          .wallet-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+          }
+
+          .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+         .wallet-address {
+            font-size: 14px;
+            color: #333;
+          }
+
+        .copy-button,
+        .disconnect-button {
+            background-color: #FF7E2F;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+          }
+
+        .wallet-dropdown {
+          margin-top: 10px;
+          padding: 10px;
+          background-color: white;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+          max-height: 200px;
+          overflow-y: auto;
+          width: 100%;
+        }
+
+        .connect-button,
+        .add-button {
+          background-color: #FF7E2F;
+          color: white;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .wallet-input-container {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        .wallet-input {
+          flex: 3;
+          padding: 10px;
+          border: 1px solid #E0E0E0;
+          border-radius: 8px;
+          font-size: 16px;
+        }
+
+        /* Agent Display Styles */
+        .agent-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+        .agent-image {
+          width: 100px;
+          height: 100px;
+        }
+
+        .agent-info h3 {
+          font-size: 1.1em;
+          font-weight: bold;
+          text-align: center;
+          margin: 0;
+          color: #333;
+        }
+
+        .traits {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .trait {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .progress-bar {
+          flex: 1;
+          background-color: #000;
+          border-radius: 10px;
+          overflow: hidden;
+          height: 15px;
+          margin-left: 15px;
+          width: 100px;
+        }
+
+        .progress {
+          height: 100%;
+          color: white;
+          text-align: right;
+          padding-right: 5px;
+          border-radius: 5px;
+          font-size: 10px;
+        }
+
+        /* Filter buttons */
+        .filter-buttons {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        .filter-button {
+          background-color: #F1F0EB;
+          color: #333;
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.3s, color 0.3s;
+          flex: 1;
+        }
+
+        .filter-button.active,
+        .filter-button:hover {
+            background-color: #FF7E2F;
+            color: white;
           }
         }
 
@@ -961,9 +1578,9 @@ const DashboardV3: React.FC = () => {
             height: auto;
           }
 
-          .wallet-management {
-            flex-direction: column;
-            align-items: flex-start;
+          .agent-display h2,
+          .wallet-management h2 {
+            font-size: 1.2em;
           }
 
           .header {
@@ -979,6 +1596,29 @@ const DashboardV3: React.FC = () => {
             width: 100%;
             justify-content: center;
           }
+          .agent-image {
+            width: 100px;
+            height: 100px;
+          }
+
+        .progress-bar {
+          flex: 1;
+          background-color: #000;
+          border-radius: 10px;
+          overflow: hidden;
+          height: 15px;
+          margin-left: 15px;
+          width: 100px;
+        }
+
+        .progress {
+          height: 100%;
+          color: white;
+          text-align: right;
+          padding-right: 5px;
+          border-radius: 5px;
+          font-size: 10px;
+        }
         }
 
         @media (max-width: 360px) {
@@ -1020,6 +1660,28 @@ const DashboardV3: React.FC = () => {
       `}</style>
     </div>
   );
+};
+
+const getTraitIcon = (trait: string) => {
+  switch (trait) {
+    case 'Mining': return '⛏️';
+    case 'Building': return '🏗️';
+    case 'Defending': return '🛡️';
+    case 'Scouting': return '🔍';
+    case 'Healing': return '➕';
+    default: return '';
+  }
+};
+
+const getTraitColor = (trait: string) => {
+  switch (trait) {
+    case 'Mining': return '#FF7300';
+    case 'Building': return '#BF52B4';
+    case 'Defending': return '#55D0FF';
+    case 'Scouting': return '#FFE600';
+    case 'Healing': return '#45DC6F';
+    default: return '#C8C8D9';
+  }
 };
 
 export default DashboardV3;
