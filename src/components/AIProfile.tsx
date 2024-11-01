@@ -182,7 +182,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: space-between;
           width: 150px;
-          position: fixed;
+          position: absolute;
           top: 20px;
           z-index: 1002;
         }
@@ -356,9 +356,14 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 1004;
+          z-index: 9999;
+        }
+
+        .modalContent {
+          z-index: 10000;
         }
       }
+
       `}</style>
     </div>
   );
