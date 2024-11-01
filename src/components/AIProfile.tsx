@@ -225,7 +225,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 2000;
+          z-index: 9999; /* Ensure the overlay is on top of most elements */
         }
 
         .modalContent {
@@ -235,6 +235,8 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           text-align: center;
           max-width: 600px;
           width: 90%;
+          z-index: 10000; /* Higher than overlay */
+
         }
 
         .inputSection {
