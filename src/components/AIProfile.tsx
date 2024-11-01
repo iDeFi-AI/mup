@@ -182,7 +182,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: space-between;
           width: 150px;
-          position: absolute;
+          position: fixed;
           top: 20px;
           z-index: 1002;
         }
@@ -225,7 +225,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 9999; /* Ensure the overlay is on top of most elements */
+          z-index: 1004;
         }
 
         .modalContent {
@@ -235,8 +235,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           text-align: center;
           max-width: 600px;
           width: 90%;
-          z-index: 10000; /* Higher than overlay */
-
         }
 
         .inputSection {
@@ -347,6 +345,20 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 5px;
           font-size: 10px;
         }
+        @media (max-width: 768px) {
+        .modalContainer {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1004;
+        }
+      }
       `}</style>
     </div>
   );
