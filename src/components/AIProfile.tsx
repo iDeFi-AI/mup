@@ -212,7 +212,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 15px;
           overflow: hidden;
           position: relative;
-          z-index: 1001;
+          z-index: 1000;
         }
 
         .modalContainer {
@@ -235,6 +235,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           text-align: center;
           max-width: 600px;
           width: 90%;
+          z-index: 1005
         }
 
         .inputSection {
@@ -345,25 +346,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 5px;
           font-size: 10px;
         }
-        @media (max-width: 768px) {
-        .modalContainer {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 9999;
-        }
-
-        .modalContent {
-          z-index: 10000;
-        }
-      }
-
       `}</style>
     </div>
   );

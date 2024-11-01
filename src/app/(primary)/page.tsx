@@ -603,7 +603,7 @@ const DashboardV3: React.FC = () => {
         }
 
         .spline-container {
-          z-index: 1003; /* Set a higher z-index than the sidebar */
+          z-index: 1002; /* Set a higher z-index than the sidebar */
         }
 
         .gear-icon {
@@ -1387,6 +1387,8 @@ const DashboardV3: React.FC = () => {
             bottom: 0;
             left: -100%;
             transition: left 0.3s ease;
+            z-index: 1000;
+
           }
 
           .sidebar.open {
