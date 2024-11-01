@@ -212,7 +212,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 15px;
           overflow: hidden;
           position: relative;
-          z-index: 1000;
+          z-index: 1001;
         }
 
         .modalContainer {

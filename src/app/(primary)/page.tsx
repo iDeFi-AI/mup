@@ -1395,6 +1395,7 @@ const DashboardV3: React.FC = () => {
 
           .main-content {
             padding: 20px 10px 20px 10px;
+            z-index: auto; 
           }
 
           .agent-display,
