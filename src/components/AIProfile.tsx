@@ -44,7 +44,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
   const startListening = () => {
     setListening(true);
-    // Implement voice recognition logic
   };
 
   const openModal = (type: 'voice' | 'text') => {
@@ -67,7 +66,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
   const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedIndex = parseInt(e.target.value, 10);
-    onAgentChange(selectedIndex); // Sync with parent component
+    onAgentChange(selectedIndex);
   };
 
   return (
@@ -86,7 +85,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
       {showModal && (
         <div className="modalContainer">
-          <div className="modalContent">
+          <div className="modalContent animated-modal">
             <h2>{modalType === 'voice' ? 'Voice Input' : 'Text Input'} for AI</h2>
             {modalType === 'text' && (
               <div className="inputSection">
@@ -125,7 +124,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
       {showAgentModal && (
         <div className="modalContainer">
-          <div className="modalContent">
+          <div className="modalContent animated-modal">
             <h2>Review Your Agent(s)</h2>
             <select onChange={handleAgentChange} value={selectedAgent} className="agentSelect">
               {agents.map((agent, index) => (
@@ -134,7 +133,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
                 </option>
               ))}
             </select>
-
             <div className="agentDetails">
               <img src={agents[selectedAgent].imageUrl} alt={agents[selectedAgent].name} className="agentImage" />
               <div className="traits">
@@ -184,6 +182,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           width: 150px;
           position: absolute;
           top: 20px;
+          margin-top: 20px;
           z-index: 1002;
         }
 
@@ -195,6 +194,12 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           justify-content: center;
           align-items: center;
           cursor: pointer;
+          transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .iconContainer:hover {
+          background-color: rgba(0, 123, 255, 0.4);
+          transform: scale(1.1);
         }
 
         .icon {
@@ -231,11 +236,17 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
         .modalContent {
           background-color: white;
           padding: 30px;
-          border-radius: 8px;
+          border-radius: 12px;
           text-align: center;
-          max-width: 600px;
-          width: 90%;
-          z-index: 1005
+          max-width: 90%;
+          width: 400px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          transition: transform 0.3s ease-in-out, opacity 0.3s ease;
+        }
+
+        .animated-modal {
+          transform: scale(1.05);
+          opacity: 1;
         }
 
         .inputSection {
@@ -247,17 +258,15 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
         .input {
           width: 100%;
-          padding: 20px;
-          font-size: 20px;
+          padding: 15px;
+          font-size: 18px;
           border-radius: 8px;
           border: 1px solid #ddd;
           resize: none;
-          min-height: 150px;
         }
 
         .voiceInput {
           width: 100%;
-          padding: 20px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -270,13 +279,18 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
         }
 
         .sendButton, .micButton {
-          padding: 15px 30px;
-          font-size: 18px;
+          padding: 10px 25px;
+          font-size: 16px;
           background-color: #007bff;
           color: white;
           border-radius: 8px;
           cursor: pointer;
           border: none;
+          transition: background-color 0.3s;
+        }
+
+        .sendButton:hover, .micButton:hover {
+          background-color: #0056b3;
         }
 
         .closeButton {
@@ -288,14 +302,20 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           cursor: pointer;
           margin-top: 15px;
           border: none;
+          transition: background-color 0.3s;
+        }
+
+        .closeButton:hover {
+          background-color: #e66b27;
         }
 
         .agentSelect {
           margin-top: 10px;
           padding: 12px;
-          font-size: 18px;
+          font-size: 16px;
           width: 100%;
           border-radius: 4px;
+          border: 1px solid #ddd;
         }
 
         .agentDetails {
@@ -303,10 +323,10 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
         }
 
         .agentImage {
-          width: 100px;
-          height: 100px;
-          border-radius: 20%;
-          margin-bottom: 20px;
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          margin-bottom: 15px;
         }
 
         .traits {
@@ -331,10 +351,10 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
         .progressBar {
           flex: 1;
-          background-color: #000;
+          background-color: #e0e0e0;
           border-radius: 10px;
           overflow: hidden;
-          height: 15px;
+          height: 12px;
           margin-left: 15px;
         }
 
@@ -345,6 +365,27 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           padding-right: 5px;
           border-radius: 5px;
           font-size: 10px;
+        }
+
+        @media (max-width: 480px) {
+          .modalContent {
+            width: 90%;
+            padding: 20px;
+          }
+
+          .input {
+            padding: 10px;
+          }
+
+          .sendButton, .micButton, .closeButton {
+            font-size: 14px;
+            padding: 8px 20px;
+          }
+
+          .agentImage {
+            width: 60px;
+            height: 60px;
+          }
         }
       `}</style>
     </div>

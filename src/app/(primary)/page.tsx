@@ -1387,12 +1387,13 @@ const DashboardV3: React.FC = () => {
             bottom: 0;
             left: -100%;
             transition: left 0.3s ease;
-            z-index: 1000;
+            z-index: 999;
 
           }
 
           .sidebar.open {
             left: 0;
+            z-index: 999;
           }
 
           .main-content {
