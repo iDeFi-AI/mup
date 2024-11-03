@@ -600,10 +600,11 @@ const DashboardV3: React.FC = () => {
           justify-content: center;
           align-items: center;
           margin-bottom: 20px;
+          z-index: 1002;
         }
 
         .spline-container {
-          z-index: 1002; /* Set a higher z-index than the sidebar */
+          z-index: 1003; /* Set a higher z-index than the sidebar */
         }
 
         .gear-icon {
@@ -715,6 +716,32 @@ const DashboardV3: React.FC = () => {
           padding: 20px;
           overflow-y: auto;
           transition: all 0.3s ease;
+          z-index: auto;
+        }
+
+         /* AIProfile modal styling with higher z-index */
+        .modalOverlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.6);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 2000; /* High z-index to load over sidebar and other elements */
+        }
+
+        .modalContent {
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 400px;
+          position: relative;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          animation: fadeIn 0.3s ease-in-out;
         }
 
         .header {
@@ -940,7 +967,7 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
           flex-wrap: wrap;
           width: 100%;
-          margin-top: 10px;
+          margin-top: 35px;
         }
 
         .filter-button {
@@ -1378,6 +1405,14 @@ const DashboardV3: React.FC = () => {
 
           .hamburger-button {
             display: block;
+          }
+
+          .modalContent {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            border-radius: 0;
+            padding: 30px 15px;
           }
 
           .sidebar {

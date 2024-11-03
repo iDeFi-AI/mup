@@ -183,7 +183,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           position: absolute;
           top: 20px;
           margin-top: 20px;
-          z-index: 1002;
+          z-index: 1500; /* Increased to ensure icons are visible above other dashboard elements */
         }
 
         .iconContainer {
@@ -226,11 +226,11 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           left: 0;
           right: 0;
           bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
+          background-color: rgba(0, 0, 0, 0.7);
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 1004;
+          z-index: 2000; /* High z-index to layer above the dashboard content */
         }
 
         .modalContent {
@@ -242,6 +242,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           width: 400px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
           transition: transform 0.3s ease-in-out, opacity 0.3s ease;
+          z-index: 2001; /* Ensures modal content appears above other elements */
         }
 
         .animated-modal {
@@ -351,10 +352,10 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
         .progressBar {
           flex: 1;
-          background-color: #e0e0e0;
+          background-color: #000;
           border-radius: 10px;
           overflow: hidden;
-          height: 12px;
+          height: 14px;
           margin-left: 15px;
         }
 
