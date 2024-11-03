@@ -230,7 +230,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 2000;
+          z-index: 9999;
         }
 
         .modalContent {
@@ -242,7 +242,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           width: 400px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
           transition: transform 0.3s ease-in-out, opacity 0.3s ease;
-          z-index: 2001;
+          z-index: 10000;
         }
 
         .animated-modal {
@@ -370,9 +370,16 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
         @media (max-width: 480px) {
           .modalContent {
-            max-width: 90vw; /* Ensure modal takes up most of the viewport width on small screens */
-            width: auto; /* Make the modal content flexible */
-          }
+          background-color: white;
+          padding: 20px;
+          border-radius: 12px;
+          text-align: center;
+          max-width: 75%; /* Allow the modal content to be responsive */
+          width: 400px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          transition: transform 0.3s ease-in-out, opacity 0.3s ease;
+          z-index: 10000;
+        }
 
           .input {
             padding: 10px;
