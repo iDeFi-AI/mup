@@ -224,13 +224,15 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           position: fixed;
           top: 0;
           left: 0;
-          width: 100vw; /* Extend the modal container to full viewport width */
-          height: 100vh; /* Extend the modal container to full viewport height */
+          width: 100vw; /* Full viewport width */
+          height: 100vh; /* Full viewport height */
           background-color: rgba(0, 0, 0, 0.7);
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 9999;
+          z-index: 100000; /* Extremely high to ensure it sits above everything */
+          transform: translateZ(0); /* Trigger 3D rendering on mobile Safari */
+          isolation: isolate; /* Ensure it's isolated from other z-index contexts */
         }
 
         .modalContent {
@@ -238,11 +240,11 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           padding: 20px;
           border-radius: 12px;
           text-align: center;
-          max-width: 90%; /* Allow the modal content to be responsive */
+          max-width: 90%; /* Responsive width */
           width: 400px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          transition: transform 0.3s ease-in-out, opacity 0.3s ease;
-          z-index: 10000;
+          z-index: 100001; /* Ensure it’s above the modalContainer */
+          transform: translateZ(0); /* Prevents flickering or positioning issues on mobile */
         }
 
         .animated-modal {
@@ -369,7 +371,7 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
         }
 
         @media (max-width: 480px) {
-          .modalContent {
+         .modalContent {
           background-color: white;
           padding: 20px;
           border-radius: 12px;

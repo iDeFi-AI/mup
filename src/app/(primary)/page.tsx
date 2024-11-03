@@ -592,6 +592,7 @@ const DashboardV3: React.FC = () => {
           height: 100vh;
           background-color: #f8f9fa;
           overflow: hidden;
+          z-index: 1; /* Lower priority */
         }
 
         .profile-container {
@@ -651,7 +652,7 @@ const DashboardV3: React.FC = () => {
           align-items: center;
           border-right: 1px solid #E0E0E0;
           overflow-y: auto;
-          z-index: 1000;
+          z-index: 1;
           transition: all 0.3s ease;
         }
 
