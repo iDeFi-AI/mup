@@ -224,25 +224,25 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           position: fixed;
           top: 0;
           left: 0;
-          right: 0;
-          bottom: 0;
+          width: 100vw; /* Extend the modal container to full viewport width */
+          height: 100vh; /* Extend the modal container to full viewport height */
           background-color: rgba(0, 0, 0, 0.7);
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 2000; /* High z-index to layer above the dashboard content */
+          z-index: 2000;
         }
 
         .modalContent {
           background-color: white;
-          padding: 30px;
+          padding: 20px;
           border-radius: 12px;
           text-align: center;
-          max-width: 90%;
+          max-width: 90%; /* Allow the modal content to be responsive */
           width: 400px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
           transition: transform 0.3s ease-in-out, opacity 0.3s ease;
-          z-index: 2001; /* Ensures modal content appears above other elements */
+          z-index: 2001;
         }
 
         .animated-modal {
@@ -370,8 +370,8 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
         @media (max-width: 480px) {
           .modalContent {
-            width: 90%;
-            padding: 20px;
+            max-width: 90vw; /* Ensure modal takes up most of the viewport width on small screens */
+            width: auto; /* Make the modal content flexible */
           }
 
           .input {

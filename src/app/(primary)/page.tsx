@@ -719,31 +719,6 @@ const DashboardV3: React.FC = () => {
           z-index: auto;
         }
 
-         /* AIProfile modal styling with higher z-index */
-        .modalOverlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.6);
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          z-index: 2000; /* High z-index to load over sidebar and other elements */
-        }
-
-        .modalContent {
-          background: white;
-          padding: 20px;
-          border-radius: 10px;
-          width: 90%;
-          max-width: 400px;
-          position: relative;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          animation: fadeIn 0.3s ease-in-out;
-        }
-
         .header {
           display: flex;
           justify-content: space-between;
@@ -967,7 +942,7 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
           flex-wrap: wrap;
           width: 100%;
-          margin-top: 35px;
+          margin-top: 30px;
         }
 
         .filter-button {
@@ -1407,14 +1382,6 @@ const DashboardV3: React.FC = () => {
             display: block;
           }
 
-          .modalContent {
-            width: 100%;
-            height: 100%;
-            max-width: none;
-            border-radius: 0;
-            padding: 30px 15px;
-          }
-
           .sidebar {
             width: 240px;
             position: fixed;
@@ -1578,7 +1545,7 @@ const DashboardV3: React.FC = () => {
           gap: 10px;
           flex-wrap: wrap;
           width: 100%;
-          margin-top: 10px;
+          margin-top: 30px;
         }
 
         .filter-button {
