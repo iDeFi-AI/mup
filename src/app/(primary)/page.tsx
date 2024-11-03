@@ -541,7 +541,6 @@ const DashboardV3: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* Filters */}
           <div className="filter-buttons">
             <button
               className={`filter-button ${activeCategory === 'ALL' ? 'active' : ''}`}

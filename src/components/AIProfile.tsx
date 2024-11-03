@@ -382,19 +382,19 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           transition: transform 0.3s ease-in-out, opacity 0.3s ease;
           z-index: 10000;
         }
-
-          .input {
-            padding: 10px;
+          
+        .input {
+          padding: 10px;
           }
 
-          .sendButton, .micButton, .closeButton {
-            font-size: 14px;
-            padding: 8px 20px;
+        .sendButton, .micButton, .closeButton {
+          font-size: 14px;
+          padding: 8px 20px;
           }
 
-          .agentImage {
-            width: 60px;
-            height: 60px;
+        .agentImage {
+          width: 60px;
+          height: 60px;
           }
         }
       `}</style>
