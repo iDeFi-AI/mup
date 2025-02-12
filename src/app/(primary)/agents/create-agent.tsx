@@ -57,13 +57,13 @@ const CreateAgent: React.FC = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-2xl font-bold text-center mb-6">Create Your Free Agent</h2>
+      <h2 className="text-2xl font-bold text-center mb-6">Mint and Deploy a New iNFAgent</h2>
 
       {/* Agent creation options */}
       <div className="flex flex-col items-center text-center border p-4 rounded-lg shadow-md bg-gray-100 mb-4">
         <input
           type="text"
-          placeholder="Free Agent Name"
+          placeholder="Name Your iNFAgent"
           value={agentName}
           onChange={(e) => setAgentName(e.target.value)}
           className="mb-4 p-2 border rounded"
@@ -71,7 +71,7 @@ const CreateAgent: React.FC = () => {
 
         {/* Tool Assignment */}
         <div className="mb-4">
-          <h4 className="mb-2">Assign Tools to Free Agent:</h4>
+          <h4 className="mb-2">Assign Tools to you iNFAgent:</h4>
           <div className="flex flex-wrap gap-4">
             {dashboardTools.map((tool) => (
               <button

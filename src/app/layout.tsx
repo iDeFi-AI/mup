@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Centering the header content */}
         <header className="w-full bg-white shadow-md py-6 flex justify-center items-center">
           <div className="text-xl font-semibold flex items-center">
-            <img src="/nfa-idefi-ai.png" alt="iDeFi.AI" className="h-12 inline-block" />
+            <img src="/coinlogo.png" alt="iDeFi.AI" className="h-12 inline-block" />
             <span className="ml-2">(beta)</span>
           </div>
         </header>
@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <footer className="w-full space-between bg-white shadow-md py-4 text-center">
           <p className="text-sm text-gray-500">
-            © 2024 iDeFi.AI - All Rights Reserved
+            © 2025 iDEFi.AI - All Rights Reserved
           </p>
           <p className="text-sm text-gray-500">
             <Link href="/terms" className="text-gray-900 hover:text-neorange">Beta Terms</Link>

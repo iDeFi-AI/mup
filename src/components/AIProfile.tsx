@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMicrophone, faPaperPlane, faPencilAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import Soundbar from './Soundbar';
@@ -9,7 +10,7 @@ interface AIProfileProps {
 }
 
 const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) => {
-  const [Spline, setSpline] = useState<any>(null);
+  // Removed Spline-related code; now using a GIF.
   const [input, setInput] = useState<string>('');
   const [listening, setListening] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -18,29 +19,16 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
 
   const agents = [
     {
-      name: 'iNFA #001',
+      name: 'iNFAgent #001',
       imageUrl: '/iNFA1.png',
       traits: { Mining: 75, Building: 60, Defending: 45, Scouting: 85, Healing: 55 },
     },
     {
-      name: 'iNFA #002',
+      name: 'iNFAgent #002',
       imageUrl: '/iNFA2.png',
       traits: { Mining: 65, Building: 75, Defending: 60, Scouting: 50, Healing: 70 },
     },
   ];
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (async () => {
-        try {
-          const SplineModule = await import('@splinetool/react-spline');
-          setSpline(() => SplineModule.default);
-        } catch (error) {
-          console.error('Error loading Spline:', error);
-        }
-      })();
-    }
-  }, []);
 
   const startListening = () => {
     setListening(true);
@@ -154,16 +142,9 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
         </div>
       )}
 
-      <div className="splineContainer">
-        {Spline ? (
-          <Spline
-            scene="https://prod.spline.design/YzJ9nu0DOvW6uWZO/scene.splinecode"
-            className="spline"
-            onWheel={(e: any) => e.preventDefault()}
-          />
-        ) : (
-          <div>Loading...</div>
-        )}
+      {/* Replace Spline with our responsive infa.gif */}
+      <div className="infaContainer">
+        <img src="/infa.gif" alt="Spinning Token" className="infaToken" />
       </div>
 
       <style jsx>{`
@@ -175,17 +156,14 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           padding: 20px;
           position: relative;
         }
-
         .iconGroup {
           display: flex;
           justify-content: space-between;
           width: 150px;
           position: absolute;
-          top: 20px;
-          margin-top: 20px;
-          z-index: 1500; /* Increased to ensure icons are visible above other dashboard elements */
+          top: -5px;
+          z-index: 1500;
         }
-
         .iconContainer {
           padding: 8px;
           background-color: rgba(0, 123, 255, 0.2);
@@ -196,69 +174,49 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           cursor: pointer;
           transition: background-color 0.3s, transform 0.3s;
         }
-
         .iconContainer:hover {
           background-color: rgba(0, 123, 255, 0.4);
           transform: scale(1.1);
         }
-
         .icon {
           font-size: 24px;
           color: #007bff;
         }
-
-        .splineContainer {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          max-width: 250px;
-          height: 250px;
-          border-radius: 15px;
-          overflow: hidden;
-          position: relative;
-          z-index: 1000;
-        }
-
         .modalContainer {
           position: fixed;
           top: 0;
           left: 0;
-          width: 100vw; /* Full viewport width */
-          height: 100vh; /* Full viewport height */
+          width: 100vw;
+          height: 100vh;
           background-color: rgba(0, 0, 0, 0.7);
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 100000; /* Extremely high to ensure it sits above everything */
-          transform: translateZ(0); /* Trigger 3D rendering on mobile Safari */
-          isolation: isolate; /* Ensure it's isolated from other z-index contexts */
+          z-index: 100000;
+          transform: translateZ(0);
+          isolation: isolate;
         }
-
         .modalContent {
           background-color: white;
           padding: 20px;
           border-radius: 12px;
           text-align: center;
-          max-width: 90%; /* Responsive width */
+          max-width: 90%;
           width: 400px;
           box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          z-index: 100001; /* Ensure it’s above the modalContainer */
-          transform: translateZ(0); /* Prevents flickering or positioning issues on mobile */
+          z-index: 100001;
+          transform: translateZ(0);
         }
-
         .animated-modal {
           transform: scale(1.05);
           opacity: 1;
         }
-
         .inputSection {
           display: flex;
           flex-direction: column;
           align-items: center;
           gap: 15px;
         }
-
         .input {
           width: 100%;
           padding: 15px;
@@ -267,7 +225,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border: 1px solid #ddd;
           resize: none;
         }
-
         .voiceInput {
           width: 100%;
           display: flex;
@@ -275,12 +232,10 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           align-items: center;
           gap: 10px;
         }
-
         .voiceDisplay {
           font-size: 18px;
           text-align: center;
         }
-
         .sendButton, .micButton {
           padding: 10px 25px;
           font-size: 16px;
@@ -291,11 +246,9 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border: none;
           transition: background-color 0.3s;
         }
-
         .sendButton:hover, .micButton:hover {
           background-color: #0056b3;
         }
-
         .closeButton {
           background-color: #ff7e2f;
           color: white;
@@ -307,11 +260,9 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border: none;
           transition: background-color 0.3s;
         }
-
         .closeButton:hover {
           background-color: #e66b27;
         }
-
         .agentSelect {
           margin-top: 10px;
           padding: 12px;
@@ -320,38 +271,31 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 4px;
           border: 1px solid #ddd;
         }
-
         .agentDetails {
           margin-top: 20px;
         }
-
         .agentImage {
           width: 80px;
           height: 80px;
           border-radius: 50%;
           margin-bottom: 15px;
         }
-
         .traits {
           text-align: left;
         }
-
         .trait {
           display: flex;
           align-items: center;
           margin-bottom: 8px;
         }
-
         .traitIcon {
           width: 24px;
           margin-right: 8px;
         }
-
         .traitName {
           width: 80px;
           font-weight: bold;
         }
-
         .progressBar {
           flex: 1;
           background-color: #000;
@@ -360,7 +304,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           height: 14px;
           margin-left: 15px;
         }
-
         .progress {
           height: 100%;
           color: white;
@@ -369,32 +312,26 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 5px;
           font-size: 10px;
         }
-
-        @media (max-width: 480px) {
-         .modalContent {
-          background-color: white;
-          padding: 20px;
-          border-radius: 12px;
-          text-align: center;
-          max-width: 75%; /* Allow the modal content to be responsive */
-          width: 400px;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-          transition: transform 0.3s ease-in-out, opacity 0.3s ease;
-          z-index: 10000;
+        /* Responsive infa.gif container */
+        .infaContainer {
+          width: 100%;
+          max-width: 100px;
+          margin: 20px auto;
+          position: relative;
+          z-index: 1000;
+          aspect-ratio: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
-          
-        .input {
-          padding: 10px;
-          }
-
-        .sendButton, .micButton, .closeButton {
-          font-size: 14px;
-          padding: 8px 20px;
-          }
-
-        .agentImage {
-          width: 60px;
-          height: 60px;
+        .infaToken {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+        @media (max-width: 480px) {
+          .infaContainer {
+            max-width: 100px;
           }
         }
       `}</style>
