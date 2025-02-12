@@ -14,7 +14,7 @@ import {
   PlusIcon,
   CopyIcon,
 } from "@/components/icons";
-import FinancialHealth from "../metrics/financial-health";
+import FinancialHealth from "../finance-services/financial-health";
 import CommunicationHub from "./communication-hub";
 
 const clientCategories = {
