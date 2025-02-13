@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMicrophone, faPaperPlane, faPencilAlt, faCog } from '@fortawesome/free-solid-svg-icons';
 import Soundbar from './Soundbar';
@@ -9,179 +10,16 @@ interface AIProfileProps {
   onAgentChange: (index: number) => void;
 }
 
-const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) => {
-  // Removed Spline-related code; now using a GIF.
-  const [input, setInput] = useState<string>('');
-  const [listening, setListening] = useState<boolean>(false);
-  const [showModal, setShowModal] = useState<boolean>(false);
-  const [modalType, setModalType] = useState<'voice' | 'text' | null>(null);
-  const [showAgentModal, setShowAgentModal] = useState<boolean>(false);
-
-  const agents = [
-    {
-      name: 'iNFAgent #001',
-      imageUrl: '/iNFA1.png',
-      traits: { Mining: 75, Building: 60, Defending: 45, Scouting: 85, Healing: 55 },
-    },
-    {
-      name: 'iNFAgent #002',
-      imageUrl: '/iNFA2.png',
-      traits: { Mining: 65, Building: 75, Defending: 60, Scouting: 50, Healing: 70 },
-    },
-  ];
-
-  const startListening = () => {
-    setListening(true);
-  };
-
-  const openModal = (type: 'voice' | 'text') => {
-    setModalType(type);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setModalType(null);
-  };
-
-  const openAgentModal = () => {
-    setShowAgentModal(true);
-  };
-
-  const closeAgentModal = () => {
-    setShowAgentModal(false);
-  };
-
-  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedIndex = parseInt(e.target.value, 10);
-    onAgentChange(selectedIndex);
-  };
-
-  return (
-    <div className="container">
-      <div className="iconGroup">
-        <div onClick={() => openModal('text')} className="iconContainer">
-          <FontAwesomeIcon icon={faPencilAlt} className="icon" />
-        </div>
-        <div onClick={() => openModal('voice')} className="iconContainer">
-          <FontAwesomeIcon icon={faMicrophone} className="icon" />
-        </div>
-        <div onClick={openAgentModal} className="iconContainer">
-          <FontAwesomeIcon icon={faCog} className="icon" />
-        </div>
+// A portal component that renders children into document.body and injects modal styles globally.
+const PortalModal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Ensure we're on the client.
+  if (typeof document === 'undefined') return null;
+  return ReactDOM.createPortal(
+    <>
+      <div className="modalContainer">
+        {children}
       </div>
-
-      {showModal && (
-        <div className="modalContainer">
-          <div className="modalContent animated-modal">
-            <h2>{modalType === 'voice' ? 'Voice Input' : 'Text Input'} for AI</h2>
-            {modalType === 'text' && (
-              <div className="inputSection">
-                <textarea
-                  placeholder="Enter a prompt for the AI..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  className="input"
-                />
-                <button className="sendButton">
-                  <FontAwesomeIcon icon={faPaperPlane} />
-                </button>
-              </div>
-            )}
-            {modalType === 'voice' && (
-              <div className="inputSection">
-                <div className="voiceInput">
-                  <input
-                    type="text"
-                    placeholder="Listening..."
-                    value={input}
-                    readOnly
-                    className="input voiceDisplay"
-                  />
-                  {listening && <Soundbar listening={listening} />}
-                </div>
-                <button onClick={startListening} className="micButton">
-                  <FontAwesomeIcon icon={faMicrophone} /> Start Voice Command
-                </button>
-              </div>
-            )}
-            <button onClick={closeModal} className="closeButton">Close</button>
-          </div>
-        </div>
-      )}
-
-      {showAgentModal && (
-        <div className="modalContainer">
-          <div className="modalContent animated-modal">
-            <h2>Review Your Agent(s)</h2>
-            <select onChange={handleAgentChange} value={selectedAgent} className="agentSelect">
-              {agents.map((agent, index) => (
-                <option key={index} value={index}>
-                  {agent.name}
-                </option>
-              ))}
-            </select>
-            <div className="agentDetails">
-              <img src={agents[selectedAgent].imageUrl} alt={agents[selectedAgent].name} className="agentImage" />
-              <div className="traits">
-                {Object.entries(agents[selectedAgent].traits).map(([trait, level]) => (
-                  <div key={trait} className="trait">
-                    <span className="traitIcon">{getTraitIcon(trait)}</span>
-                    <span className="traitName">{trait}</span>
-                    <div className="progressBar">
-                      <div className="progress" style={{ width: `${level}%`, backgroundColor: getTraitColor(trait) }}>
-                        {level}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={closeAgentModal} className="closeButton">Close</button>
-          </div>
-        </div>
-      )}
-
-      {/* Replace Spline with our responsive infa.gif */}
-      <div className="infaContainer">
-        <img src="/infa.gif" alt="Spinning Token" className="infaToken" />
-      </div>
-
-      <style jsx>{`
-        .container {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 20px;
-          position: relative;
-        }
-        .iconGroup {
-          display: flex;
-          justify-content: space-between;
-          width: 150px;
-          position: absolute;
-          top: -5px;
-          z-index: 1500;
-        }
-        .iconContainer {
-          padding: 8px;
-          background-color: rgba(0, 123, 255, 0.2);
-          border-radius: 8px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          cursor: pointer;
-          transition: background-color 0.3s, transform 0.3s;
-        }
-        .iconContainer:hover {
-          background-color: rgba(0, 123, 255, 0.4);
-          transform: scale(1.1);
-        }
-        .icon {
-          font-size: 24px;
-          color: #007bff;
-        }
+      <style jsx global>{`
         .modalContainer {
           position: fixed;
           top: 0;
@@ -271,6 +109,209 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           border-radius: 4px;
           border: 1px solid #ddd;
         }
+      `}</style>
+    </>,
+    document.body
+  );
+};
+
+const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) => {
+  // Removed Spline-related code; now using a GIF.
+  const [input, setInput] = useState<string>('');
+  const [listening, setListening] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [modalType, setModalType] = useState<'voice' | 'text' | null>(null);
+  const [showAgentModal, setShowAgentModal] = useState<boolean>(false);
+
+  const agents = [
+    {
+      name: 'iNFAgent #001',
+      imageUrl: '/iNFA1.png',
+      traits: { Mining: 75, Building: 60, Defending: 45, Scouting: 85, Healing: 55 },
+    },
+    {
+      name: 'iNFAgent #002',
+      imageUrl: '/iNFA2.png',
+      traits: { Mining: 65, Building: 75, Defending: 60, Scouting: 50, Healing: 70 },
+    },
+  ];
+
+  const startListening = () => {
+    setListening(true);
+  };
+
+  const openModal = (type: 'voice' | 'text') => {
+    setModalType(type);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setModalType(null);
+  };
+
+  const openAgentModal = () => {
+    setShowAgentModal(true);
+  };
+
+  const closeAgentModal = () => {
+    setShowAgentModal(false);
+  };
+
+  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedIndex = parseInt(e.target.value, 10);
+    onAgentChange(selectedIndex);
+  };
+
+  return (
+    <div className="container">
+      <div className="iconGroup">
+        <div onClick={() => openModal('text')} className="iconContainer">
+          <FontAwesomeIcon icon={faPencilAlt} className="icon" />
+        </div>
+        <div onClick={() => openModal('voice')} className="iconContainer">
+          <FontAwesomeIcon icon={faMicrophone} className="icon" />
+        </div>
+        <div onClick={openAgentModal} className="iconContainer">
+          <FontAwesomeIcon icon={faCog} className="icon" />
+        </div>
+      </div>
+
+      {/* AI Input Modal */}
+      {showModal && (
+        <PortalModal>
+          <div className="modalContent animated-modal">
+            <h2>{modalType === 'voice' ? 'Voice Input' : 'Text Input'} for AI</h2>
+            {modalType === 'text' && (
+              <div className="inputSection">
+                <textarea
+                  placeholder="Enter a prompt for the AI..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  className="input"
+                />
+                <button className="sendButton">
+                  <FontAwesomeIcon icon={faPaperPlane} />
+                </button>
+              </div>
+            )}
+            {modalType === 'voice' && (
+              <div className="inputSection">
+                <div className="voiceInput">
+                  <input
+                    type="text"
+                    placeholder="Listening..."
+                    value={input}
+                    readOnly
+                    className="input voiceDisplay"
+                  />
+                  {listening && <Soundbar listening={listening} />}
+                </div>
+                <button onClick={startListening} className="micButton">
+                  <FontAwesomeIcon icon={faMicrophone} /> Start Voice Command
+                </button>
+              </div>
+            )}
+            <button onClick={closeModal} className="closeButton">Close</button>
+          </div>
+        </PortalModal>
+      )}
+
+      {/* Agent Review Modal */}
+      {showAgentModal && (
+        <PortalModal>
+          <div className="modalContent animated-modal">
+            <h2>Review Your Agent(s)</h2>
+            <select onChange={handleAgentChange} value={selectedAgent} className="agentSelect">
+              {agents.map((agent, index) => (
+                <option key={index} value={index}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+            <div className="agentDetails">
+              <img src={agents[selectedAgent].imageUrl} alt={agents[selectedAgent].name} className="agentImage" />
+              <div className="traits">
+                {Object.entries(agents[selectedAgent].traits).map(([trait, level]) => (
+                  <div key={trait} className="trait">
+                    <span className="traitIcon">{getTraitIcon(trait)}</span>
+                    <span className="traitName">{trait}</span>
+                    <div className="progressBar">
+                      <div className="progress" style={{ width: `${level}%`, backgroundColor: getTraitColor(trait) }}>
+                        {level}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button onClick={closeAgentModal} className="closeButton">Close</button>
+          </div>
+        </PortalModal>
+      )}
+
+      {/* Replace Spline with our responsive infa.gif */}
+      <div className="infaContainer">
+        <img src="/infa.gif" alt="Spinning Token" className="infaToken" />
+      </div>
+
+      <style jsx>{`
+        .container {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 20px;
+          position: relative;
+        }
+        .iconGroup {
+          display: flex;
+          justify-content: space-between;
+          width: 150px;
+          position: absolute;
+          top: -5px;
+          z-index: 1500;
+        }
+        .iconContainer {
+          padding: 8px;
+          background-color: rgba(0, 123, 255, 0.2);
+          border-radius: 8px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.3s;
+        }
+        .iconContainer:hover {
+          background-color: rgba(0, 123, 255, 0.4);
+          transform: scale(1.1);
+        }
+        .icon {
+          font-size: 24px;
+          color: #007bff;
+        }
+        .infaContainer {
+          width: 100%;
+          max-width: 100px;
+          margin: 20px auto;
+          position: relative;
+          z-index: 1000;
+          aspect-ratio: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        .infaToken {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+        @media (max-width: 480px) {
+          .infaContainer {
+            max-width: 100px;
+          }
+        }
+        /* Local styles for agent modal elements outside the portal */
         .agentDetails {
           margin-top: 20px;
         }
@@ -311,28 +352,6 @@ const AIProfile: React.FC<AIProfileProps> = ({ selectedAgent, onAgentChange }) =
           padding-right: 5px;
           border-radius: 5px;
           font-size: 10px;
-        }
-        /* Responsive infa.gif container */
-        .infaContainer {
-          width: 100%;
-          max-width: 100px;
-          margin: 20px auto;
-          position: relative;
-          z-index: 1000;
-          aspect-ratio: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-        .infaToken {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-        @media (max-width: 480px) {
-          .infaContainer {
-            max-width: 100px;
-          }
         }
       `}</style>
     </div>

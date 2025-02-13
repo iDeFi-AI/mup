@@ -129,6 +129,18 @@ const categories = {
 const industries = [
   {
     id: 101,
+    name: 'Gaming',
+    label: 'Gaming',
+    icon: Gaming,
+  },
+  {
+    id: 102,
+    name: 'Logistics',
+    label: 'Logistics',
+    icon: Logistics,
+  },
+  {
+    id: 103,
     name: 'FinancialServices',
     label: 'Financial',
     icon: Financial,
@@ -139,7 +151,13 @@ const industries = [
     ],
   },
   {
-    id: 102,
+    id: 104,
+    name: 'Education',
+    label: 'Education',
+    icon: Education,
+  },
+  {
+    id: 105,
     name: 'Healthcare',
     label: 'Healthcare',
     icon: Health,
@@ -150,19 +168,7 @@ const industries = [
     ],
   },
   {
-    id: 103,
-    name: 'Logistics',
-    label: 'Logistics',
-    icon: Logistics,
-  },
-  {
-    id: 104,
-    name: 'Supply Chain',
-    label: 'Supply Chain',
-    icon: Supply,
-  },
-  {
-    id: 105,
+    id: 106,
     name: 'Social Media',
     label: 'Social Media',
     icon: SocialMedia,
@@ -175,32 +181,27 @@ const industries = [
     ],
   },
   {
-    id: 106,
-    name: 'Gaming',
-    label: 'Gaming',
-    icon: Gaming,
-  },
-  {
     id: 107,
-    name: 'Education',
-    label: 'Education',
-    icon: Education,
+    name: 'Supply Chain',
+    label: 'Supply Chain',
+    icon: Supply,
   },
   {
     id: 108,
     name: 'Public Services',
-    label: 'Public Services',
-    icon: KeyIcon,
+    label: 'Public Service',
+    icon: PublicService,
   },
 ];
 
 const integrations = [
-  { id: 201, name: 'APIProviders', label: 'API Providers', icon: PlusIcon },
-  { id: 202, name: 'Marketplace', label: 'Marketplace', icon: Shop },
-  { id: 203, name: 'Analytics', label: 'Analytics', icon: GraphIcon },
   { id: 204, name: 'Squads', label: 'Squads', icon: Squad },
   { id: 205, name: 'Syndicates', label: 'Syndicates', icon: Syndicate },
+  { id: 203, name: 'Analytics', label: 'Analytics', icon: GraphIcon },
   { id: 206, name: 'Upgrades', label: 'Upgrades', icon: LightningIcon },
+  { id: 202, name: 'Marketplace', label: 'Marketplace', icon: Shop },
+  { id: 201, name: 'APIProviders', label: 'API Providers', icon: PlusIcon },
+
 ];
 
 // ------------------------------------------------------------------
