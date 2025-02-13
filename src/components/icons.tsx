@@ -35,7 +35,18 @@ import {
   faMagnifyingGlassChart,
   faListCheck,
   faEye,
-  faRocket   // Used as a placeholder for Warpcast
+  faRocket,
+  faBookOpen,
+  faTruckRampBox,
+  faParachuteBox,
+  faGamepad,
+  faLandmarkDome,
+  faHashtag,
+  faUserGroup,
+  faPeopleGroup,
+  faShop,
+  faClockRotateLeft,
+  faHeartPulse,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Free Brands Icons for social media
@@ -84,7 +95,7 @@ export const ContractIcon: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faFileContract} {...props} />
 );
 
-export const SavingsIcon: React.FC<IconProps> = (props) => (
+export const Financial: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faPiggyBank} {...props} />
 );
 
@@ -175,6 +186,51 @@ export const CheckList: React.FC<IconProps> = (props) => (
 export const Eye: React.FC<IconProps> = (props) => (
   <FontAwesomeIcon icon={faEye} {...props} />
 );
+
+export const Gaming: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faGamepad} {...props} />
+);
+
+export const PublicService: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faLandmarkDome} {...props} />
+);
+
+export const Logistics: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faTruckRampBox} {...props} />
+);
+
+export const Supply: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faParachuteBox} {...props} />
+);
+
+export const Education: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faBookOpen} {...props} />
+);
+
+export const SocialMedia: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faHashtag} {...props} />
+);
+
+export const Squad: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faUserGroup} {...props} />
+);
+
+export const Syndicate: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faPeopleGroup} {...props} />
+);
+
+export const Shop: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faShop} {...props} />
+);
+
+export const History: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faClockRotateLeft} {...props} />
+);
+
+export const Health: React.FC<IconProps> = (props) => (
+  <FontAwesomeIcon icon={faHeartPulse} {...props} />
+);
+
 
 // ========================
 // Exporting Social Media Icons (Brands)

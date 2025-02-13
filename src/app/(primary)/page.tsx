@@ -27,7 +27,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   FileUpload,
-  Heal,
+  Health,
   Build,
   Scout,
   Mine,
@@ -37,7 +37,18 @@ import {
   InstagramIcon,
   TwitterIcon,
   WarpcastIcon,
-  LinkedInIcon
+  LinkedInIcon,
+  Logistics,
+  Gaming,
+  Supply,
+  PublicService,
+  Education,
+  SocialMedia,
+  Squad,
+  Syndicate,
+  Shop,
+  History,
+  Financial,
 } from '@/components/icons';
 import SecurityCheck from './security/security-check';
 import FinancialRoadmap from './finance-services/financial-roadmap';
@@ -60,6 +71,9 @@ import InstagramPage from './social-media/instagram';
 import HealthcareOverview from './healthcare/overviewpage';
 import HealthcareDiagnostics from './healthcare/diagnosticspage';
 import HealthcareDataManagement from './healthcare/datapage';
+import PublicServicesAnalytics from './public-services/public-analytics';
+import PublicServicesEngagement from './public-services/public-engagement';
+import PublicServicesOverview from './public-services/public-overview';
 // ------------------------------------------------------------------
 // Simulated API call to fetch alerts
 // ------------------------------------------------------------------
@@ -81,20 +95,23 @@ const tools = [
   { id: 8, name: 'LinkedInPage', label: 'Linkedin Portal', icon: LinkedInIcon, active: true },
   { id: 9, name: 'WarpcastPage', label: 'Warpcast Portal', icon: WarpcastIcon, active: true },
   { id: 10, name: 'InstagramPage', label: 'Instagram Portal', icon: InstagramIcon, active: true },
-  { id: 11, name: 'HealthcareOverview', label: 'Healthcare Clinic', icon: Heal, active: true },
-  { id: 12, name: 'HealthcareDiagnostics', label: 'Healthcare Diag', icon: Heal, active: true },
-  { id: 13, name: 'HealthcareDataManagement', label: 'Healthcare Data', icon: Heal, active: true },
+  { id: 11, name: 'HealthcareOverview', label: 'Healthcare Clinic', icon: Health, active: true },
+  { id: 12, name: 'HealthcareDiagnostics', label: 'Healthcare Diag', icon: Health, active: true },
+  { id: 13, name: 'HealthcareDataManagement', label: 'Healthcare Data', icon: Health, active: true },
+  { id: 14, name: 'PublicServicesAnalytics', label: 'Public Analytics', icon: PublicService, active: true },
+  { id: 15, name: 'PublicServicesEngagement', label: 'Public Engagement', icon: PublicService, active: true },
+  { id: 16, name: 'PublicServicesOverview', label: 'Public Overview', icon: PublicService, active: true },
 
 ];
 
 const sideMenuTools = [
-  { id: 14, name: 'CreateAgent', label: 'Create Agent', icon: Robot, active: true },
-  { id: 15, name: 'AgentBoard', label: 'Agent Board', icon: Robot, active: true },
-  { id: 16, name: 'AgentManager', label: 'Agent Manager', icon: Robot, active: true },
-  { id: 17, name: 'DataUpload', label: 'Dataset', icon: FileUpload, active: true },
-  { id: 18, name: 'ShareDashboardModal', label: 'Share with Client', icon: ContractIcon, active: true },
-  { id: 19, name: 'UpgradePlanModal', label: 'Upgrade Plan', icon: LightningIcon, active: true },
-  { id: 20, name: 'Notifications', label: 'Notifications', icon: faBell, active: true },
+  { id: 17, name: 'CreateAgent', label: 'Create Agent', icon: Robot, active: true },
+  { id: 18, name: 'AgentBoard', label: 'Agent Board', icon: Robot, active: true },
+  { id: 19, name: 'AgentManager', label: 'Agent Manager', icon: Robot, active: true },
+  { id: 20, name: 'DataUpload', label: 'Dataset', icon: FileUpload, active: true },
+  { id: 21, name: 'ShareDashboardModal', label: 'Share with Client', icon: ContractIcon, active: true },
+  { id: 22, name: 'UpgradePlanModal', label: 'Upgrade Plan', icon: LightningIcon, active: true },
+  { id: 23, name: 'Notifications', label: 'Notifications', icon: faBell, active: true },
 ];
 
 const categories = {
@@ -113,8 +130,8 @@ const industries = [
   {
     id: 101,
     name: 'FinancialServices',
-    label: 'Financial Services',
-    icon: GraphIcon,
+    label: 'Financial',
+    icon: Financial,
     modules: [
       { id: 'financial-roadmap', label: 'Financial Roadmap' },
       { id: 'investment-simulator', label: 'Investment Simulator' },
@@ -125,30 +142,30 @@ const industries = [
     id: 102,
     name: 'Healthcare',
     label: 'Healthcare',
-    icon: Heal,
+    icon: Health,
     modules: [
-      { id: 'HealthcareOverview', label: 'Healthcare Clinic' },
-      { id: 'HealthcareDiagnostics', label: 'Healthcare Diag' },
-      { id: 'HealthcareDataManagement', label: 'Healthcare Data' },
+      { id: 'overviewpage', label: 'Healthcare Clinic' },
+      { id: 'diagnosticspage', label: 'Healthcare Diag' },
+      { id: 'datapage', label: 'Healthcare Data' },
     ],
   },
   {
     id: 103,
     name: 'Logistics',
     label: 'Logistics',
-    icon: Build,
+    icon: Logistics,
   },
   {
     id: 104,
     name: 'Supply Chain',
     label: 'Supply Chain',
-    icon: Build,
+    icon: Supply,
   },
   {
     id: 105,
-    name: 'Gaming',
-    label: 'Gaming & Social Media',
-    icon: Robot,
+    name: 'Social Media',
+    label: 'Social Media',
+    icon: SocialMedia,
     modules: [
       { id: 'discord', label: 'Discord' },
       { id: 'xtwitter', label: 'X-Twitter' },
@@ -159,12 +176,18 @@ const industries = [
   },
   {
     id: 106,
-    name: 'Education',
-    label: 'Education',
-    icon: KeyIcon,
+    name: 'Gaming',
+    label: 'Gaming',
+    icon: Gaming,
   },
   {
     id: 107,
+    name: 'Education',
+    label: 'Education',
+    icon: Education,
+  },
+  {
+    id: 108,
     name: 'Public Services',
     label: 'Public Services',
     icon: KeyIcon,
@@ -173,10 +196,10 @@ const industries = [
 
 const integrations = [
   { id: 201, name: 'APIProviders', label: 'API Providers', icon: PlusIcon },
-  { id: 202, name: 'Marketplace', label: 'Marketplace', icon: ContractIcon },
+  { id: 202, name: 'Marketplace', label: 'Marketplace', icon: Shop },
   { id: 203, name: 'Analytics', label: 'Analytics', icon: GraphIcon },
-  { id: 204, name: 'Squads', label: 'Squads', icon: Scout },
-  { id: 205, name: 'Syndicates', label: 'Syndicates', icon: CheckList },
+  { id: 204, name: 'Squads', label: 'Squads', icon: Squad },
+  { id: 205, name: 'Syndicates', label: 'Syndicates', icon: Syndicate },
   { id: 206, name: 'Upgrades', label: 'Upgrades', icon: LightningIcon },
 ];
 
@@ -222,8 +245,9 @@ const DashboardV3: React.FC = () => {
   const [selectedHealthCareModule, setSelectedHealthCareModule] = useState<string | null>(null);
   const [selectedPublicServicesModule, setSelectedPublicServicesModule] = useState<string | null>(null);
   const [selectedSupplyChainModule, setSelectedSupplyChainModule] = useState<string | null>(null);
-  const [selectedLogisticsModule, setSelectLogisticsModule] = useState<string | null>(null);
-  const [selectedEducationModule, setSelectEducationModule] = useState<string | null>(null);
+  const [selectedLogisticsModule, setSelectedLogisticsModule] = useState<string | null>(null);
+  const [selectedEducationModule, setSelectedEducationModule] = useState<string | null>(null);
+  const [selectedSocialMediaModule, setSelectedSocialMediaModule] = useState<string | null>(null);
 
   // UI toggles
   const [recentsOpen, setRecentsOpen] = useState(true);
@@ -242,10 +266,10 @@ const DashboardV3: React.FC = () => {
   // Clear industry module selections when switching industries
   useEffect(() => {
     if (activeTool !== 'FinancialServices') setSelectedFSModule(null);
-    if (activeTool !== 'Gaming') setSelectedGamingModule(null);
+    if (activeTool !== 'Social Media') setSelectedLogisticsModule(null);
     if (activeTool !== 'Healthcare') setSelectedHealthCareModule(null);
-    if (activeTool !== 'Education') setSelectEducationModule(null);
-    if (activeTool !== 'Logistics') setSelectLogisticsModule(null);
+    if (activeTool !== 'Education') setSelectedEducationModule(null);
+    if (activeTool !== 'Logistics') setSelectedLogisticsModule(null);
     if (activeTool !== 'Public Services') setSelectedPublicServicesModule(null);
     if (activeTool !== 'Supply Chain') setSelectedSupplyChainModule(null);
 
@@ -379,8 +403,8 @@ const DashboardV3: React.FC = () => {
     if (tool !== 'FinancialServices') {
       setSelectedFSModule(null);
     }
-    if (tool !== 'Gaming') {
-      setSelectedGamingModule(null);
+    if (tool !== 'Social Media') {
+      setSelectedSocialMediaModule(null);
     }
     setRecents((prev) => [tool, ...prev.filter((item) => item !== tool)].slice(0, 5));
   };
@@ -438,7 +462,7 @@ const DashboardV3: React.FC = () => {
     }
   };
 
-  const renderGamingModule = (module: string) => {
+  const renderSocialMediaModule = (module: string) => {
     switch (module) {
       case 'discord':
         return <DiscordPage />;
@@ -457,11 +481,11 @@ const DashboardV3: React.FC = () => {
 
   const renderHealthCareModule = (module: string) => {
     switch (module) {
-      case 'HealthcareOverview':
+      case 'overviewpage':
         return <HealthcareOverview />;
-      case 'HealthcareDiagnostics':
+      case 'diagnosticspage':
         return <HealthcareDiagnostics />;
-      case 'HealthcareDataManagement':
+      case 'datapage':
         return <HealthcareDataManagement />;
       default:
         return <p>Select a gaming module from the grid.</p>;
@@ -492,11 +516,11 @@ const renderActiveIndustry = () => {
     return selectedFSModule
       ? renderFinancialServicesModule(selectedFSModule)
       : renderIndustryGrid('Financial Services', fsModules, setSelectedFSModule);
-  } else if (activeTool === 'Gaming') {
-    const gamingModules = industries.find((ind) => ind.name === 'Gaming')?.modules ?? [];
-    return selectedGamingModule
-      ? renderGamingModule(selectedGamingModule)
-      : renderIndustryGrid('Gaming & Social Media', gamingModules, setSelectedGamingModule);
+  } else if (activeTool === 'Social Media') {
+    const SocialMediaModules = industries.find((ind) => ind.name === 'Social Media')?.modules ?? [];
+    return selectedSocialMediaModule
+      ? renderSocialMediaModule(selectedSocialMediaModule)
+      : renderIndustryGrid('Social Media', SocialMediaModules, setSelectedSocialMediaModule);
   } else if (activeTool === 'Healthcare') {
     const hcModules = industries.find((ind) => ind.name === 'Healthcare')?.modules ?? [];
     return selectedHealthCareModule
@@ -568,28 +592,12 @@ const renderActiveIndustry = () => {
       case 'UpgradePlanModal': return <UpgradePlanModal />;
       // Industries
       case 'FinancialServices': return renderActiveIndustry();
+      case 'Social Media': return renderActiveIndustry();
+      case 'Healthcare': return  renderActiveIndustry();
+      case 'Logistics': return renderActiveIndustry();
+      case 'Education': return renderActiveIndustry();
       case 'Gaming': return renderActiveIndustry();
-      case 'Healthcare':
-        return (
-          <div>
-            <h2>Healthcare Dashboard</h2>
-            <p>Secure patient data management and predictive diagnostics.</p>
-          </div>
-        );
-      case 'Logistics':
-        return (
-          <div>
-            <h2>Logistics & Supply Chain Dashboard</h2>
-            <p>Real-time tracking and risk mitigation.</p>
-          </div>
-        );
-      case 'Education':
-        return (
-          <div>
-            <h2>Education & Public Services Dashboard</h2>
-            <p>Transparent resource allocation and data-driven policy making.</p>
-          </div>
-        );
+
       case 'APIProviders':
         return (
           <div>
@@ -661,7 +669,7 @@ const renderActiveIndustry = () => {
             </li>
             {/* Tools Submenu */}
             <li onClick={() => setRecentsOpen(!recentsOpen)}>
-              <GraphIcon /> Recents {recentsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+              <History /> Recents {recentsOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
             </li>
             {recentsOpen && recents.length > 0 && (
               <ul className="sub-menu">
@@ -862,7 +870,7 @@ const renderActiveIndustry = () => {
               <Scout style={{ marginRight: '8px' }} /> Scouting
             </button>
             <button className={`filter-button ${activeCategory === 'HEAL' ? 'active' : ''}`} onClick={() => handleFilterClick('HEAL')}>
-              <Heal style={{ marginRight: '8px' }} /> Healing
+              <Health style={{ marginRight: '8px' }} /> Healing
             </button>
           </div>
         </div>
@@ -886,7 +894,6 @@ const renderActiveIndustry = () => {
           display: flex;
           justify-content: center;
           align-items: center;
-          margin-bottom: 20px;
           z-index: 1002;
         }
         .gear-icon {
