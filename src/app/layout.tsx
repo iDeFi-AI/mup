@@ -26,10 +26,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="bg-background-color min-h-full">
       <body className="bg-background-color min-h-screen flex flex-col">
         {/* Centering the header content */}
-        <header className="w-full bg-white shadow-md py-6 flex justify-center items-center">
+        <header className="w-full bg-white shadow-md py-8 flex justify-center items-center">
           <div className="text-xl font-semibold flex items-center">
-            <img src="/coinlogo.png" alt="iDeFi.AI" className="h-12 inline-block" />
-            <span className="ml-2">(beta)</span>
+          <img src="/coinlogo.png" alt="iDeFi.AI" className="h-8 sm:h-10 md:h-12 inline-block" />
+          <span className="ml-2">(beta)</span>
           </div>
         </header>
         <main className="flex-grow ">
